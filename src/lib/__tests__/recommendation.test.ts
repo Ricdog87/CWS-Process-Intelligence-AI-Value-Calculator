@@ -71,3 +71,14 @@ describe('recommendSolution', () => {
     expect(r.assumptions).toHaveLength(1);
   });
 });
+
+describe('status-aware next step', () => {
+  it('gives delivery-stage advice for pilots and implemented processes', async () => {
+    const { createDemoProcesses } = await import('../../data/demoData');
+    const { evaluateProcess } = await import('../evaluation');
+    const base = createDemoProcesses().find((p) => p.id === 'demo-service-request-classification')!;
+    expect(evaluateProcess({ ...base, status: 'pilot' }).nextStep.title).toContain('Pilot-KPIs');
+    expect(evaluateProcess({ ...base, status: 'implemented' }).nextStep.title).toContain('Nutzen-Tracking');
+    expect(evaluateProcess({ ...base, status: 'new' }).nextStep.title).not.toContain('Pilot-KPIs');
+  });
+});

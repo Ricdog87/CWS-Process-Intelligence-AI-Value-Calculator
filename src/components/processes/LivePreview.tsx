@@ -4,7 +4,14 @@ import { formatCurrency, formatMonths, formatNumber, formatSignedCurrency } from
 import { CategoryBadge, SolutionBadge } from '../ui/DomainBadges';
 import { ScoreRing } from '../ui/ScoreRing';
 
-export function LivePreview({ evaluation: e, hasName }: { evaluation: ProcessEvaluation; hasName: boolean }) {
+interface LivePreviewProps {
+  evaluation: ProcessEvaluation;
+  hasName: boolean;
+  /** The approach hinges on rule-based + unstructured answers; before that it would only restate default assumptions. */
+  decidingAnswersOpen: boolean;
+}
+
+export function LivePreview({ evaluation: e, hasName, decidingAnswersOpen }: LivePreviewProps) {
   const eco = e.economics;
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card">
@@ -41,19 +48,27 @@ export function LivePreview({ evaluation: e, hasName }: { evaluation: ProcessEva
 
         <div className="mt-5">
           <p className="text-xs font-medium text-slate-500">Empfohlener Lösungsansatz</p>
-          <div className="mt-1.5">
-            <SolutionBadge approach={e.recommendation.approach} />
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-slate-600">{e.recommendation.reasons[0]}</p>
+          {decidingAnswersOpen ? (
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+              Erscheint, sobald „Regelbasiert und repetitiv“ und „Unstrukturierte Informationen“ beantwortet sind.
+            </p>
+          ) : (
+            <>
+              <div className="mt-1.5">
+                <SolutionBadge approach={e.recommendation.approach} />
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600">{e.recommendation.reasons[0]}</p>
+            </>
+          )}
         </div>
 
         <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-xs">
           <div>
-            <dt className="text-slate-500">Eingesparte Stunden p. a.</dt>
+            <dt className="text-slate-500">Eingesparte Stunden p. a.</dt>
             <dd className="tabular mt-0.5 text-sm font-semibold text-slate-900">{formatNumber(eco.totalAnnualHoursSaved)} h</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Kapazitätswert p. a.</dt>
+            <dt className="text-slate-500">Kapazitätswert p. a.</dt>
             <dd className="tabular mt-0.5 text-sm font-semibold text-slate-900">{formatCurrency(eco.annualCapacityValue)}</dd>
           </div>
           <div>

@@ -149,7 +149,7 @@ export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel 
   return (
     <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 space-y-6">
-        <FormSection step={1} title="Allgemeine Informationen" description="Worum geht es, und wer verantwortet den Prozess?">
+        <FormSection step={1} title="Allgemeine Informationen" description="Worum geht es, und welcher Fachbereich ist zuständig?">
           <TextField
             className="md:col-span-2"
             label="Prozessname"
@@ -339,7 +339,7 @@ export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel 
           />
           <NumberField
             className="md:col-span-2 md:max-w-[calc(50%-0.625rem)]"
-            label="Realisierbare harte Einsparungen p. a. (optional)"
+            label="Realisierbare harte Einsparungen p. a. (optional)"
             unit="€/Jahr"
             placeholder="z. B. 5.000"
             hint="Nur Cash-wirksame Einsparungen – keine Personalkosten."
@@ -367,7 +367,11 @@ export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel 
       </div>
 
       <aside className="lg:sticky lg:top-6 lg:self-start">
-        <LivePreview evaluation={preview} hasName={values.name.trim().length > 0} />
+        <LivePreview
+          evaluation={preview}
+          hasName={values.name.trim().length > 0}
+          decidingAnswersOpen={values.assessment.ruleBased === null || values.assessment.unstructuredInfo === null}
+        />
       </aside>
 
       <ConfirmDialog

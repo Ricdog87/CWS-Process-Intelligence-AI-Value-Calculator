@@ -244,11 +244,16 @@ export function ProcessDetailPage({ id }: { id: string }) {
         }
       >
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          <Stat label="Eingesparte Stunden p. a." value={formatHours(eco.totalAnnualHoursSaved)} sub={`≈ ${formatNumber(eco.savedHoursPerMonth, 0)} h Bearbeitung / Monat`} />
-          <Stat label="Kapazitätswert p. a." value={formatCurrency(eco.annualCapacityValue)} sub="Potenzial, kein Cash" />
-          <Stat label="Qualitätsnutzen p. a." value={formatCurrency(eco.annualAvoidedReworkValue)} sub="Vermiedene Nacharbeit" />
-          <Stat label="Harte Einsparungen p. a." value={formatCurrency(eco.annualHardSavings)} sub="Cash-wirksam" />
-          <Stat label="Netto-Nutzen Jahr 1" value={formatSignedCurrency(eco.firstYearNetBenefit)} negative={eco.firstYearNetBenefit < 0} sub={eco.firstYearRoiPct === null ? 'ROI nicht berechenbar' : `ROI ${formatPercent(eco.firstYearRoiPct)}`} />
+          <Stat label="Eingesparte Stunden p. a." value={formatHours(eco.totalAnnualHoursSaved)} sub={`≈ ${formatNumber(eco.savedHoursPerMonth, 0)} h Bearbeitung / Monat`} />
+          <Stat label="Kapazitätswert p. a." value={formatCurrency(eco.annualCapacityValue)} sub="Potenzial, kein Cash" />
+          <Stat label="Qualitätsnutzen p. a." value={formatCurrency(eco.annualAvoidedReworkValue)} sub="Vermiedene Nacharbeit" />
+          <Stat label="Harte Einsparungen p. a." value={formatCurrency(eco.annualHardSavings)} sub="Cash-wirksam" />
+          <Stat
+            label="Netto-Nutzen Jahr 1"
+            value={formatSignedCurrency(eco.firstYearNetBenefit)}
+            negative={eco.firstYearNetBenefit < 0}
+            sub={`${eco.firstYearRoiPct === null ? 'ROI nicht berechenbar' : `ROI ${formatPercent(eco.firstYearRoiPct)}`} · inkl. Kapazität · Cash: ${formatSignedCurrency(eco.cashFirstYearNet)}`}
+          />
           <Stat label="Amortisation" value={formatMonths(eco.paybackMonths)} sub="inkl. Kapazitätswert" />
         </div>
         <EstimateNote className="mt-4" />
@@ -283,7 +288,7 @@ export function ProcessDetailPage({ id }: { id: string }) {
             <Definition label="Fehlerreduktion" value={orDash(s.errorReductionPct, (v) => formatPercent(v))} />
             <Definition label="Implementierungskosten" value={orDash(s.implementationCost, (v) => formatCurrency(v))} />
             <Definition label="Betriebskosten / Monat" value={orDash(s.monthlyOperatingCost, (v) => formatCurrency(v))} />
-            <Definition label="Harte Einsparungen p. a." value={orDash(s.annualHardSavings, (v) => formatCurrency(v))} />
+            <Definition label="Harte Einsparungen p. a." value={orDash(s.annualHardSavings, (v) => formatCurrency(v))} />
           </dl>
         </Card>
       </div>

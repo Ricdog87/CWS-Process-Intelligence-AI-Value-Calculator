@@ -4,7 +4,7 @@ import { formatNumber } from '../../lib/format';
 
 export function ScoreBreakdown({ score }: { score: AutomationScoreResult }) {
   return (
-    <div className="scrollbar-thin relative overflow-x-auto">
+    <div className="scrollbar-thin scroll-hint-x relative overflow-x-auto">
       <table className="w-full min-w-[640px] text-sm">
         <thead className="bg-slate-50 text-xs text-slate-500">
           <tr className="border-b border-slate-200">

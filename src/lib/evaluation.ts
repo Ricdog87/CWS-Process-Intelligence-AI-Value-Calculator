@@ -1,7 +1,7 @@
 /**
  * Combines score, recommendation, economics and priority into one evaluation per process.
  */
-import type { BusinessProcess } from '../types/process';
+import type { BusinessProcess, ProcessStatus } from '../types/process';
 import { calculateEconomics, economicInputsOf, ECONOMIC_INPUT_LABELS, type EconomicResult } from './calculations';
 import { calculatePriority, type PriorityResult } from './priority';
 import { recommendSolution, type RecommendationResult } from './recommendation';
@@ -28,14 +28,33 @@ export function recommendNextStep(
   score: AutomationScoreResult,
   recommendation: RecommendationResult,
   economics: EconomicResult,
+  status: ProcessStatus = 'new',
 ): NextStep {
   const details: string[] = [];
   let title: string;
+
+  // Processes already in delivery get delivery-stage advice, not discovery advice.
+  if (status === 'implemented') {
+    return {
+      title: 'Nutzen-Tracking: realisierte Zeit- und Qualitätseffekte gegen den Business Case messen und auf ähnliche Prozesse übertragen.',
+      details: economics.annualHardSavings === 0
+        ? ['Nachweisen, wie die freigesetzte Kapazität genutzt wird – erst dann entsteht ein finanzieller Effekt.']
+        : [],
+    };
+  }
+  if (status === 'pilot') {
+    return {
+      title: 'Pilot-KPIs (Zeit je Vorgang, Fehlerquote, Akzeptanz) gegen den Business Case messen und Go/No-Go für den Rollout vorbereiten.',
+      details: score.isPreliminary ? [`Offene Punkte im Pilot klären: ${score.openPoints.join(' ')}`] : [],
+    };
+  }
 
   if (score.openPoints.length >= 3) {
     title = 'Bewertung vervollständigen: fehlende Angaben mit dem Fachbereich ergänzen und erneut bewerten.';
   } else if (recommendation.approach === 'optimization_first') {
     title = 'Prozess zuerst optimieren: Varianten reduzieren, Regeln festlegen und Eingänge digitalisieren – danach erneut bewerten.';
+  } else if (status === 'approved_discovery' && (score.category.key === 'high' || score.category.key === 'good')) {
+    title = 'Discovery durchführen: Pilot-Scope, Erfolgskriterien, Datenzugänge und Verantwortliche festlegen.';
   } else if (score.category.key === 'high') {
     title = 'Discovery-Workshop mit dem AI CoE einplanen und Pilot-Scope samt Erfolgskriterien festlegen.';
   } else if (score.category.key === 'good') {
@@ -82,7 +101,7 @@ export function evaluateProcess(process: BusinessProcess): ProcessEvaluation {
     recommendation,
     economics,
     priority,
-    nextStep: recommendNextStep(score, recommendation, economics),
+    nextStep: recommendNextStep(score, recommendation, economics, process.status),
     isPreliminary: score.isPreliminary || recommendation.isPreliminary || !economics.isComplete || priority.isPreliminary,
     openPoints,
   };

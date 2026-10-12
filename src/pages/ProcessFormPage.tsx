@@ -40,7 +40,7 @@ export function ProcessFormPage({ id }: { id?: string }) {
         subtitle={
           isEdit
             ? 'Angaben anpassen – Score, Empfehlung und Wirtschaftlichkeit werden sofort neu berechnet.'
-            : 'In vier Schritten zur nachvollziehbaren Bewertung. Die Live-Bewertung rechts zeigt sofort, wie sich Ihre Angaben auswirken.'
+            : 'In vier Schritten zur nachvollziehbaren Bewertung. Die Live-Bewertung zeigt sofort, wie sich Ihre Angaben auswirken.'
         }
       />
       {existing?.isDemo && <DemoNotice text="Sie bearbeiten einen fiktiven Demo-Prozess." />}

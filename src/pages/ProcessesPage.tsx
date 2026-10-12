@@ -15,7 +15,7 @@ import { useToast } from '../state/Toast';
 import type { Department, ProcessStatus } from '../types/process';
 
 const selectClass =
-  'h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-sm shadow-sm focus:border-ink-700 focus:ring-2 focus:ring-brand-300 focus:outline-none';
+  'h-9 max-w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2.5 text-sm shadow-sm focus:border-ink-700 focus:ring-2 focus:ring-brand-300 focus:outline-none';
 
 export function ProcessesPage() {
   const rows = usePortfolioRows();

@@ -30,7 +30,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const notify = useCallback(
     (message: string, tone: ToastTone = 'success') => {
       const id = nextId.current++;
-      setItems((list) => [...list.slice(-2), { id, tone, message }]);
+      // A success supersedes earlier error messages (e.g. validation errors before a successful save).
+      setItems((list) => [...(tone === 'success' ? list.filter((t) => t.tone !== 'error') : list).slice(-2), { id, tone, message }]);
       window.setTimeout(() => dismiss(id), tone === 'error' ? 6000 : 3500);
     },
     [dismiss],

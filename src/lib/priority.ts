@@ -69,7 +69,7 @@ export function calculatePriority(input: PriorityInput): PriorityResult {
     effortPoints: effort,
     explanation: [
       `Automatisierungsreife: Score ${readiness} × ${w(PRIORITY_WEIGHTS.readiness)} %`,
-      `Wirtschaftlicher Wert: ${formatCurrency(input.annualRecurringValue)} p. a. → ${value} Punkte × ${w(PRIORITY_WEIGHTS.value)} %`,
+      `Wirtschaftlicher Wert: ${formatCurrency(input.annualRecurringValue)} p. a. → ${value} Punkte × ${w(PRIORITY_WEIGHTS.value)} %`,
       input.implementationCost === null
         ? `Umsetzungsaufwand: keine Kostenangabe → neutral ${effort} Punkte × ${w(PRIORITY_WEIGHTS.effort)} %`
         : `Umsetzungsaufwand: ${formatCurrency(input.implementationCost)} einmalig → ${effort} Punkte × ${w(PRIORITY_WEIGHTS.effort)} %`,

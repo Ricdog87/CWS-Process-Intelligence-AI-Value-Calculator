@@ -72,6 +72,15 @@
   scrollbar-width: thin;
 }
 
+/* Edge shadows on horizontal scroll containers – visible only where content is cut off. */
+@utility scroll-hint-x {
+  background:
+    linear-gradient(to right, #fff 30%, rgb(255 255 255 / 0)) left / 32px 100% no-repeat local,
+    linear-gradient(to left, #fff 30%, rgb(255 255 255 / 0)) right / 32px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgb(16 24 40 / 0.16), transparent) left / 12px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(16 24 40 / 0.16), transparent) right / 12px 100% no-repeat scroll;
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;

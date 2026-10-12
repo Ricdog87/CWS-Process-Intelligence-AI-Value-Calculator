@@ -11,6 +11,14 @@ Fachbereiche erfassen wiederkehrende Prozesse und erhalten sofort:
 > **DEMO-DATEN – KEINE TATSÄCHLICHEN CWS-ZAHLEN.** Alle mitgelieferten Prozesse und Ergebnisse sind fiktiv.
 > Bitte keine echten Unternehmens- oder Mitarbeiterdaten eingeben.
 
+## Live-Demo
+
+**https://cws-process-intelligence.vercel.app**
+
+Gehostet auf Vercel (Projekt `cws-process-intelligence`, verknüpft mit diesem GitHub-Repo). Jeder Push auf den
+Production-Branch löst automatisch ein neues Deployment aus. `vercel.json` setzt Security-Header (CSP, Frame-Schutz u. a.),
+`noindex` gegen Suchmaschinen-Indexierung und einen SPA-Fallback, damit auch Links ohne `#` die App öffnen.
+
 ## Schnellstart
 
 Voraussetzung: Node.js ≥ 20.19

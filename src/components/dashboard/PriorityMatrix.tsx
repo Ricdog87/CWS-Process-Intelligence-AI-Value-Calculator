@@ -53,7 +53,7 @@ function MatrixTooltip({ active, payload }: { active?: boolean; payload?: { payl
       <dl className="mt-2 grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 text-slate-700">
         <dt>Automation Score</dt>
         <dd className="tabular text-right font-medium">{p.score}</dd>
-        <dt>Wert p. a. (netto)</dt>
+        <dt>Wert p. a. (netto)</dt>
         <dd className="tabular text-right font-medium">{formatCurrency(p.value)}</dd>
         <dt>Priorität</dt>
         <dd className="text-right font-medium">
@@ -163,7 +163,7 @@ export function PriorityMatrix({ rows }: { rows: PortfolioRow[] }) {
         </ResponsiveContainer>
       </div>
       <p className="mt-1 text-xs text-slate-500">
-        Y-Achse: jährlicher Netto-Wert (Kapazitäts- und Qualitätswert + harte Einsparungen − Betriebskosten). Schwellen: Score {tx}, {formatCurrency(ty)} p. a.
+        Y-Achse: jährlicher Netto-Wert (Kapazitäts- und Qualitätswert + harte Einsparungen − Betriebskosten). Schwellen: Score {tx}, {formatCurrency(ty)} p. a.
       </p>
     </div>
   );

@@ -23,16 +23,19 @@ const dateFormatter = new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium' });
 /** Avoids "-0" in output. */
 const clean = (value: number) => (Object.is(value, -0) || Math.abs(value) < 1e-9 ? 0 : value);
 
+/** Typographic minus (U+2212) for every displayed negative value – consistent with signed amounts. */
+const minus = (text: string) => text.replace('-', '\u2212');
+
 export function formatNumber(value: number | null | undefined, decimals = 0): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return '–';
-  return numberFormatter(decimals).format(clean(value));
+  return minus(numberFormatter(decimals).format(clean(value)));
 }
 
 export function formatCurrency(value: number | null | undefined, options: { compact?: boolean } = {}): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return '–';
   const v = clean(Math.round(value));
   if (options.compact) return formatCompactCurrency(v);
-  return currencyFormatter.format(v);
+  return minus(currencyFormatter.format(v));
 }
 
 /** Short German notation for KPI cards and chart axes: "1,2 Mio. €", "85 Tsd. €", "950 €". */
@@ -69,6 +72,12 @@ export function formatPercent(value: number | null | undefined, decimals = 0): s
 export function formatHours(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return '–';
   return `${formatNumber(value, value < 10 ? 1 : 0)} h`;
+}
+
+/** Hours with up to two decimals – for calculation trails that must add up when checked by hand. */
+export function formatHoursExact(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '–';
+  return `${formatNumber(value, 2)} h`;
 }
 
 export function formatMonths(value: number | null): string {

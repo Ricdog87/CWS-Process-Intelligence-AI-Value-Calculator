@@ -56,3 +56,19 @@ describe('formatAxisCurrency', () => {
     expect(formatAxisCurrency(0)).toBe('0 €');
   });
 });
+
+describe('signs and exact hours', () => {
+  it('uses the typographic minus for negative numbers and currency', async () => {
+    const { formatNumber, formatCurrency, formatPercent } = await import('../format');
+    expect(formatNumber(-29)).toBe('−29');
+    expect(formatPercent(-33)).toBe('−33 %');
+    expect(formatCurrency(-45000).replace(/ /g, ' ')).toBe('−45.000 €');
+  });
+
+  it('formats calculation-trail hours with two decimals so rows add up', async () => {
+    const { formatHoursExact } = await import('../format');
+    expect(formatHoursExact(67.5)).toBe('67,5 h');
+    expect(formatHoursExact(53.3333)).toBe('53,33 h');
+    expect(formatHoursExact(810)).toBe('810 h');
+  });
+});

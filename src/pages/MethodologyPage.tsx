@@ -24,7 +24,7 @@ const pts = (weight: number, factor: number) => formatNumber(weight * factor, 1)
 function answerTable(key: CriterionKey, weight: number): string {
   switch (key) {
     case 'frequency':
-      return FREQUENCY_BANDS.map((b) => `≥ ${formatNumber(b.min)}: ${pts(weight, b.factor)}`).join(' · ');
+      return `Vorgänge/Monat – ${FREQUENCY_BANDS.map((b) => `≥\u00a0${formatNumber(b.min)}:\u00a0${pts(weight, b.factor)}`).join(' · ')}`;
     case 'repetitiveness':
     case 'digitalData': {
       const f = ANSWER_FACTORS[key];
@@ -47,14 +47,14 @@ function answerTable(key: CriterionKey, weight: number): string {
 const FORMULAS: [string, string][] = [
   ['Manueller Aufwand / Monat', 'Vorgänge × Bearbeitungsminuten ÷ 60'],
   ['Eingesparte Stunden / Monat', 'Manueller Aufwand × erwartete Zeitreduktion'],
-  ['Freigesetzte Kapazität p. a.', 'Eingesparte Stunden / Monat × 12'],
-  ['Kapazitätswert p. a.', 'Freigesetzte Kapazität × interner Stundensatz'],
+  ['Freigesetzte Kapazität p. a.', 'Eingesparte Stunden / Monat × 12'],
+  ['Kapazitätswert p. a.', 'Freigesetzte Kapazität × interner Stundensatz'],
   ['Nacharbeit / Monat', 'Vorgänge × Fehlerquote × Nacharbeitsminuten ÷ 60'],
-  ['Qualitätsnutzen p. a.', 'Nacharbeit / Monat × erwartete Fehlerreduktion × 12 × Stundensatz'],
-  ['Betriebskosten p. a.', 'Monatliche Betriebskosten × 12'],
-  ['Netto-Nutzen Jahr 1', 'Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Implementierung − Betriebskosten p. a.'],
-  ['ROI Jahr 1', 'Netto-Nutzen Jahr 1 ÷ (Implementierung + Betriebskosten p. a.)'],
-  ['Amortisation (Monate)', 'Implementierung ÷ ((Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Betriebskosten p. a.) ÷ 12)'],
+  ['Qualitätsnutzen p. a.', 'Nacharbeit / Monat × erwartete Fehlerreduktion × 12 × Stundensatz'],
+  ['Betriebskosten p. a.', 'Monatliche Betriebskosten × 12'],
+  ['Netto-Nutzen Jahr 1', 'Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Implementierung − Betriebskosten p. a.'],
+  ['ROI Jahr 1', 'Netto-Nutzen Jahr 1 ÷ (Implementierung + Betriebskosten p. a.)'],
+  ['Amortisation (Monate)', 'Implementierung ÷ ((Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Betriebskosten p. a.) ÷ 12)'],
 ];
 
 export function MethodologyPage() {
@@ -67,7 +67,7 @@ export function MethodologyPage() {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Card title="1 · Automation Opportunity Score (0–100)" subtitle="Sieben gewichtete Kriterien, transparente Punkteregeln" bodyClassName="">
-          <div className="scrollbar-thin relative overflow-x-auto">
+          <div className="scrollbar-thin scroll-hint-x relative overflow-x-auto">
             <table className="w-full min-w-[520px] text-sm">
               <thead className="bg-slate-50 text-xs text-slate-500">
                 <tr className="border-b border-slate-200">
@@ -92,7 +92,7 @@ export function MethodologyPage() {
                 <tr className="border-t border-slate-200 bg-slate-50">
                   <td className="px-5 py-2.5 font-semibold">Summe</td>
                   <td className="tabular px-3 py-2.5 text-right font-semibold">{CRITERIA.reduce((s, c) => s + c.weight, 0)}</td>
-                  <td className="px-3 py-2.5 pr-5 text-xs text-slate-500">Frequenz in Vorgängen pro Monat</td>
+                  <td className="px-3 py-2.5 pr-5" />
                 </tr>
               </tfoot>
             </table>
@@ -172,7 +172,7 @@ export function MethodologyPage() {
           </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="mb-1.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">Wertpunkte (laufender Netto-Wert p. a.)</p>
+              <p className="mb-1.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">Wertpunkte (laufender Netto-Wert p. a.)</p>
               <ul className="space-y-1 text-sm text-slate-700">
                 {VALUE_BANDS.map((b) => (
                   <li key={b.min} className="flex justify-between gap-2">

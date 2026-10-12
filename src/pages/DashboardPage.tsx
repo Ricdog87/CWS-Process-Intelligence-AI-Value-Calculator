@@ -91,14 +91,14 @@ export function DashboardPage() {
           hint="Anzahl der Prozesse mit einem Automation Score von mindestens 80 Punkten."
         />
         <KpiCard
-          label="Eingesparte Stunden p. a."
+          label="Eingesparte Stunden p. a."
           icon={Clock3}
           value={`${formatNumber(totals.annualHoursSaved)} h`}
           sub={`≈ ${formatNumber(totals.fte, 1)} Vollzeitkräfte (FTE) an Kapazität`}
           hint={`Bearbeitungszeit plus vermiedene Nacharbeit, summiert über alle Prozesse. 1 FTE ≈ ${formatNumber(FTE_HOURS_PER_YEAR)} produktive Stunden pro Jahr. Freigesetzte Kapazität bedeutet keinen automatischen Stellenabbau.`}
         />
         <KpiCard
-          label="Kapazitätswert p. a."
+          label="Kapazitätswert p. a."
           icon={Euro}
           accent
           value={formatCompactCurrency(totals.annualCapacityValue)}
@@ -119,7 +119,7 @@ export function DashboardPage() {
             <StatusPipeline processes={processes} />
           </Card>
         </div>
-        <Card className="self-start" title="Top-Chancen für das AI CoE" subtitle="Höchste Priorität, noch nicht umgesetzt">
+        <Card className="self-start" title="Top-Chancen für das AI CoE" subtitle="Höchste Priorität, noch nicht in Pilot oder Umsetzung">
           <TopOpportunities rows={rows} />
         </Card>
       </div>

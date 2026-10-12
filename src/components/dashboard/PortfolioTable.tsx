@@ -15,8 +15,8 @@ import { ScoreBar } from '../ui/ScoreRing';
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'priority', label: 'Priorität' },
   { value: 'score', label: 'Automation Score' },
-  { value: 'capacityValue', label: 'Kapazitätswert p. a.' },
-  { value: 'netBenefit', label: 'Netto-Nutzen Jahr 1' },
+  { value: 'capacityValue', label: 'Kapazitätswert p. a.' },
+  { value: 'netBenefit', label: 'Netto-Nutzen Jahr 1 (inkl. Kapazität)' },
   { value: 'name', label: 'Name' },
 ];
 
@@ -92,7 +92,7 @@ export function PortfolioTable({ rows, totalCount, filter, onFilterChange }: Pro
             value={filter.department}
             onChange={(e) => onFilterChange({ ...filter, department: e.target.value as Department | '' })}
             aria-label="Nach Fachbereich filtern"
-            className="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm shadow-sm focus:border-ink-700 focus:ring-2 focus:ring-brand-300 focus:outline-none"
+            className="h-9 max-w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm shadow-sm focus:border-ink-700 focus:ring-2 focus:ring-brand-300 focus:outline-none"
           >
             <option value="">Alle Fachbereiche</option>
             {DEPARTMENTS.map((d) => (
@@ -108,7 +108,7 @@ export function PortfolioTable({ rows, totalCount, filter, onFilterChange }: Pro
               onFilterChange({ ...filter, sortKey: key, direction: key === 'name' ? 'asc' : 'desc' });
             }}
             aria-label="Sortieren nach"
-            className="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm shadow-sm focus:border-ink-700 focus:ring-2 focus:ring-brand-300 focus:outline-none"
+            className="h-9 max-w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm shadow-sm focus:border-ink-700 focus:ring-2 focus:ring-brand-300 focus:outline-none"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -145,7 +145,7 @@ export function PortfolioTable({ rows, totalCount, filter, onFilterChange }: Pro
           }
         />
       ) : (
-        <div className="scrollbar-thin relative overflow-x-auto">
+        <div className="scrollbar-thin scroll-hint-x relative overflow-x-auto">
           <table className="w-full min-w-[980px] text-sm">
             <thead className="bg-slate-50 text-xs text-slate-500">
               <tr className="border-b border-slate-200">
@@ -153,7 +153,7 @@ export function PortfolioTable({ rows, totalCount, filter, onFilterChange }: Pro
                 <th scope="col" className="px-2 py-2.5 text-left font-medium">Fachbereich</th>
                 <SortHeader k="score" filter={filter} onSort={toggleSort}>Automation Score</SortHeader>
                 <th scope="col" className="px-2 py-2.5 text-left font-medium">Lösungsansatz</th>
-                <SortHeader k="capacityValue" align="right" filter={filter} onSort={toggleSort}>Kapazitätswert p. a.</SortHeader>
+                <SortHeader k="capacityValue" align="right" filter={filter} onSort={toggleSort}>Kapazitätswert p. a.</SortHeader>
                 <th scope="col" className="px-2 py-2.5 text-right font-medium">Invest einmalig</th>
                 <SortHeader k="priority" filter={filter} onSort={toggleSort}>Priorität</SortHeader>
                 <th scope="col" className="px-2 py-2.5 pr-5 text-left font-medium">Status</th>

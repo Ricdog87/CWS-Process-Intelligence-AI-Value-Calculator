@@ -39,6 +39,7 @@ import { evaluateProcess } from '../lib/evaluation';
 import {
   formatCurrency,
   formatHours,
+  formatHoursExact,
   formatMonths,
   formatNumber,
   formatPercent,
@@ -161,7 +162,7 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
               <SliderField label="Reduktion der Fehler" tooltip={HELP.errorReductionPct} value={inputs.errorReductionPct} onChange={set('errorReductionPct')} error={err('scenario.errorReductionPct')} />
               <NumberField label="Einmalige Implementierungskosten" unit="€" tooltip={HELP.implementationCost} value={inputs.implementationCost} onChange={set('implementationCost')} error={err('scenario.implementationCost')} />
               <NumberField label="Monatliche Betriebskosten" unit="€/Mon." tooltip={HELP.monthlyOperatingCost} value={inputs.monthlyOperatingCost} onChange={set('monthlyOperatingCost')} error={err('scenario.monthlyOperatingCost')} />
-              <NumberField label="Harte Einsparungen p. a. (optional)" unit="€/Jahr" hint="Nur Cash-wirksame Einsparungen" tooltip={HELP.annualHardSavings} value={inputs.annualHardSavings} onChange={set('annualHardSavings')} error={err('scenario.annualHardSavings')} />
+              <NumberField label="Harte Einsparungen p. a. (optional)" unit="€/Jahr" hint="Nur Cash-wirksame Einsparungen" tooltip={HELP.annualHardSavings} value={inputs.annualHardSavings} onChange={set('annualHardSavings')} error={err('scenario.annualHardSavings')} />
             </div>
             <a href={paths.processEdit(process.id)} className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900">
               <Pencil className="size-3.5" aria-hidden />
@@ -196,14 +197,14 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
               hint="Ändert sich hier nur über das Volumen (Prozesshäufigkeit). Die qualitative Bewertung pflegen Sie im Prozess."
             />
             <KpiCard
-              label="Eingesparte Stunden p. a."
+              label="Eingesparte Stunden p. a."
               icon={Clock3}
               value={formatHours(eco.totalAnnualHoursSaved)}
               sub={`${formatHours(eco.annualHoursReleased)} Bearbeitung + ${formatHours(eco.annualAvoidedReworkHours)} Nacharbeit · ≈ ${formatNumber(eco.totalAnnualHoursSaved / FTE_HOURS_PER_YEAR, 2)} FTE`}
               hint="Bearbeitungszeit wird ohne Nacharbeit erfasst; Nacharbeit separat – daher keine Doppelzählung."
             />
             <KpiCard
-              label="Kapazitätswert p. a."
+              label="Kapazitätswert p. a."
               icon={Euro}
               accent
               value={formatCurrency(eco.annualCapacityValue)}
@@ -211,7 +212,7 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
               footnote="Wirtschaftliches Potenzial – keine garantierte Kosteneinsparung."
             />
             <KpiCard
-              label="Qualitätsnutzen p. a."
+              label="Qualitätsnutzen p. a."
               icon={ShieldCheck}
               value={formatCurrency(eco.annualAvoidedReworkValue)}
               sub={`Vermiedene Nacharbeit: ${formatHours(eco.annualAvoidedReworkHours)}`}
@@ -222,8 +223,9 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
               icon={TrendingUp}
               tone={eco.firstYearNetBenefit < 0 ? 'negative' : 'default'}
               value={formatSignedCurrency(eco.firstYearNetBenefit)}
-              sub={eco.firstYearRoiPct === null ? 'ROI nicht sinnvoll berechenbar (keine Kosten)' : `ROI Jahr 1: ${formatPercent(eco.firstYearRoiPct)}`}
-              hint="Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Implementierung − Betriebskosten Jahr 1."
+              sub={`${eco.firstYearRoiPct === null ? 'ROI nicht sinnvoll berechenbar (keine Kosten)' : `ROI Jahr 1: ${formatPercent(eco.firstYearRoiPct)}`} · inkl. Kapazitätswert`}
+              footnote={`Cash-Effekt Jahr 1 (nur harte Einsparungen): ${formatSignedCurrency(eco.cashFirstYearNet)}`}
+              hint="Wirtschaftliche Sicht: Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Implementierung − Betriebskosten Jahr 1. Enthält freigesetzte Kapazität, die nicht automatisch Cash ist."
             />
             <KpiCard
               label="Amortisation (geschätzt)"
@@ -247,7 +249,7 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
                 <CompareLine label="Implementierung" value={formatSignedCurrency(-eco.implementationCost)} />
                 <CompareLine label="Betriebskosten Jahr 1" value={formatSignedCurrency(-eco.annualOperatingCosts)} />
                 <CompareLine label="Netto-Nutzen Jahr 1" value={formatSignedCurrency(eco.firstYearNetBenefit)} total negative={eco.firstYearNetBenefit < 0} />
-                <p className="mt-2 text-xs text-slate-500">Laufender Netto-Wert ab Jahr 2: {formatSignedCurrency(eco.annualRecurringNetValue)} p. a.</p>
+                <p className="mt-2 text-xs text-slate-500">Laufender Netto-Wert ab Jahr 2: {formatSignedCurrency(eco.annualRecurringNetValue)} p. a.</p>
               </div>
               <div>
                 <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900">
@@ -276,13 +278,13 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
           </div>
 
           <Card title="Sensitivität" subtitle="Was, wenn nur ein Teil der erwarteten Effekte eintritt? Kosten bleiben gleich." bodyClassName="">
-            <div className="scrollbar-thin relative overflow-x-auto">
+            <div className="scrollbar-thin scroll-hint-x relative overflow-x-auto">
               <table className="w-full min-w-[560px] text-sm">
                 <thead className="bg-slate-50 text-xs text-slate-500">
                   <tr className="border-b border-slate-200">
                     <th scope="col" className="px-5 py-2.5 text-left font-medium">Szenario</th>
-                    <th scope="col" className="px-3 py-2.5 text-right font-medium">Stunden p. a.</th>
-                    <th scope="col" className="px-3 py-2.5 text-right font-medium">Kapazitätswert p. a.</th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">Stunden p. a.</th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">Kapazitätswert p. a.</th>
                     <th scope="col" className="px-3 py-2.5 text-right font-medium">Netto-Nutzen Jahr 1</th>
                     <th scope="col" className="px-3 py-2.5 pr-5 text-right font-medium">Amortisation</th>
                   </tr>
@@ -307,36 +309,36 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
           </Card>
 
           <Card title="Rechenweg" subtitle="Alle Formeln mit Ihren aktuellen Werten – transparent und nachvollziehbar" bodyClassName="">
-            <div className="scrollbar-thin relative overflow-x-auto">
+            <div className="scrollbar-thin scroll-hint-x relative overflow-x-auto">
               <table className="w-full min-w-[640px]">
                 <tbody className="divide-y divide-slate-100">
                   <FormulaRow
                     label="Manueller Aufwand / Monat"
                     formula={`${n(inputs.transactionsPerMonth)} Vorgänge × ${n(inputs.minutesPerTransaction, 1)} Min. ÷ 60`}
-                    result={formatHours(eco.monthlyManualHours)}
+                    result={formatHoursExact(eco.monthlyManualHours)}
                   />
                   <FormulaRow
                     label="Eingesparte Stunden / Monat"
-                    formula={`${formatHours(eco.monthlyManualHours)} × ${formatPercent(inputs.timeReductionPct ?? 0)} Zeitreduktion`}
-                    result={formatHours(eco.savedHoursPerMonth)}
+                    formula={`${formatHoursExact(eco.monthlyManualHours)} × ${formatPercent(inputs.timeReductionPct ?? 0)} Zeitreduktion`}
+                    result={formatHoursExact(eco.savedHoursPerMonth)}
                   />
-                  <FormulaRow label="Freigesetzte Kapazität p. a." formula={`${formatHours(eco.savedHoursPerMonth)} × 12`} result={formatHours(eco.annualHoursReleased)} />
+                  <FormulaRow label="Freigesetzte Kapazität p. a." formula={`${formatHoursExact(eco.savedHoursPerMonth)} × 12`} result={formatHoursExact(eco.annualHoursReleased)} />
                   <FormulaRow
-                    label="Kapazitätswert p. a."
-                    formula={`${formatHours(eco.annualHoursReleased)} × ${formatNumber(hourly, 2)} €/h`}
+                    label="Kapazitätswert p. a."
+                    formula={`${formatHoursExact(eco.annualHoursReleased)} × ${formatNumber(hourly, 2)} €/h`}
                     result={formatCurrency(eco.annualCapacityValue)}
                   />
                   <FormulaRow
                     label="Nacharbeit heute / Monat"
                     formula={`${n(inputs.transactionsPerMonth)} × ${formatPercent(inputs.errorRatePct ?? 0, 1)} Fehler × ${n(inputs.reworkMinutesPerError, 1)} Min. ÷ 60`}
-                    result={formatHours(eco.monthlyReworkHours)}
+                    result={formatHoursExact(eco.monthlyReworkHours)}
                   />
                   <FormulaRow
-                    label="Qualitätsnutzen p. a."
-                    formula={`${formatHours(eco.monthlyReworkHours)} × ${formatPercent(inputs.errorReductionPct ?? 0)} × 12 × ${formatNumber(hourly, 2)} €/h`}
+                    label="Qualitätsnutzen p. a."
+                    formula={`${formatHoursExact(eco.monthlyReworkHours)} × ${formatPercent(inputs.errorReductionPct ?? 0)} × 12 × ${formatNumber(hourly, 2)} €/h`}
                     result={formatCurrency(eco.annualAvoidedReworkValue)}
                   />
-                  <FormulaRow label="Betriebskosten p. a." formula={`${formatCurrency(inputs.monthlyOperatingCost ?? 0)} × 12`} result={formatCurrency(eco.annualOperatingCosts)} />
+                  <FormulaRow label="Betriebskosten p. a." formula={`${formatCurrency(inputs.monthlyOperatingCost ?? 0)} × 12`} result={formatCurrency(eco.annualOperatingCosts)} />
                   <FormulaRow
                     strong
                     label="Netto-Nutzen Jahr 1"
@@ -360,7 +362,10 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
                 </tbody>
               </table>
             </div>
-            <EstimateNote className="border-t border-slate-100 px-5 py-3" />
+            <p className="border-t border-slate-100 px-5 pt-3 text-xs text-slate-500">
+              Stunden im Rechenweg auf zwei Nachkommastellen gerundet; gerechnet wird intern ungerundet.
+            </p>
+            <EstimateNote className="px-5 pt-1 pb-3" />
           </Card>
         </div>
       </div>
@@ -382,12 +387,12 @@ export function CalculatorPage({ id }: { id?: string }) {
   }, [id, ranked]);
 
   const selector = rows.length > 0 && (
-    <label className="flex min-w-0 flex-1 items-center gap-2 text-sm md:flex-none">
+    <label className="flex min-w-0 flex-1 items-center gap-2 text-sm md:w-[22rem] md:flex-none">
       <span className="font-medium text-slate-600">Prozess</span>
       <select
         value={process?.id ?? ''}
         onChange={(e) => navigate(paths.calculator(e.target.value))}
-        className="h-10 w-full max-w-[22rem] min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium shadow-sm focus:border-ink-700 focus:ring-2 focus:ring-brand-300 focus:outline-none"
+        className="h-10 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium shadow-sm focus:border-ink-700 focus:ring-2 focus:ring-brand-300 focus:outline-none"
       >
         {!process && <option value="">Bitte auswählen</option>}
         {ranked.map(({ process: p }) => (

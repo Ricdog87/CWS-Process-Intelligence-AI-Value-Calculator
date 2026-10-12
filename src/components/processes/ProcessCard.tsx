@@ -26,9 +26,9 @@ export function ProcessCard({ process: p, evaluation: e }: { process: BusinessPr
             <CategoryBadge category={e.score.category.key} label={e.score.category.label} />
             <SolutionBadge approach={e.recommendation.approach} />
           </div>
-          <dl className="mt-4 grid grid-cols-3 gap-3 text-xs">
+          <dl className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-3">
             <div>
-              <dt className="text-slate-500">Stunden p. a.</dt>
+              <dt className="text-slate-500">Stunden p. a.</dt>
               <dd className="tabular mt-0.5 font-semibold text-slate-900">{formatNumber(e.economics.totalAnnualHoursSaved)} h</dd>
             </div>
             <div>

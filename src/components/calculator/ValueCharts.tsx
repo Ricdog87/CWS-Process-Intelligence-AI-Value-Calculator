@@ -13,6 +13,7 @@ import {
   YAxis,
 } from 'recharts';
 import { cumulativeValueSeries, type EconomicResult } from '../../lib/calculations';
+import { useIsNarrow } from '../../hooks';
 import { formatAxisCurrency, formatCurrency, formatMonths } from '../../lib/format';
 
 /** Chart colors – validated with the dataviz palette checker (relief via direct labels). */
@@ -101,27 +102,94 @@ function WaterfallTooltip({ active, payload }: { active?: boolean; payload?: { p
   );
 }
 
+function WaterfallLegend() {
+  return (
+    <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+      {LEGEND.map((l) => (
+        <li key={l.kind} className="inline-flex items-center gap-1.5">
+          <span className="size-2.5 rounded-sm" style={{ background: COLORS[l.kind] }} aria-hidden />
+          {l.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const WATERFALL_ARIA = 'Wasserfalldiagramm des wirtschaftlichen Nutzens im ersten Jahr. Werte siehe Rechenweg.';
+
+interface LabelBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  value: number;
+}
+
 export function WaterfallChart({ economics }: { economics: EconomicResult }) {
+  const narrow = useIsNarrow();
   const data = buildWaterfall(economics);
   const allValues = data.flatMap((d) => d.range);
   const min = Math.min(0, ...allValues);
   const max = Math.max(0, ...allValues);
+
+  // Phones: horizontal bars, so category names get a full row instead of colliding below narrow columns.
+  if (narrow) {
+    const pad = (max - min) * 0.28 || 1000;
+    const ticks = niceTicks(min < 0 ? min - pad : 0, max + pad, 3);
+    return (
+      <div>
+        <WaterfallLegend />
+        <div className="h-[268px] w-full" role="img" aria-label={WATERFALL_ARIA}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart layout="vertical" data={data} margin={{ top: 4, right: 8, bottom: 4, left: 0 }} barCategoryGap="26%">
+              <CartesianGrid stroke={COLORS.grid} horizontal={false} />
+              <XAxis
+                type="number"
+                domain={[ticks[0], ticks[ticks.length - 1]]}
+                ticks={ticks}
+                tickFormatter={(v: number) => formatAxisCurrency(v)}
+                tick={{ fontSize: 10, fill: COLORS.axis }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis type="category" dataKey="name" width={112} tick={{ fontSize: 11, fill: COLORS.axis }} tickLine={false} axisLine={false} interval={0} />
+              <ReferenceLine x={0} stroke="#8a8f98" />
+              <Tooltip content={<WaterfallTooltip />} cursor={{ fill: 'rgba(15,23,42,0.04)' }} isAnimationActive={false} />
+              <Bar dataKey="range" radius={[4, 4, 4, 4]} maxBarSize={22} isAnimationActive={false}>
+                {data.map((d) => (
+                  <Cell key={d.name} fill={COLORS[d.kind]} />
+                ))}
+                <LabelList
+                  dataKey="amount"
+                  content={(props) => {
+                    const { x, y, width, height, value } = props as unknown as LabelBox;
+                    const v = Number(value);
+                    const left = Math.min(Number(x), Number(x) + Number(width));
+                    const right = Math.max(Number(x), Number(x) + Number(width));
+                    const cy = Number(y) + Number(height) / 2 + 4;
+                    return (
+                      <text x={v < 0 ? left - 4 : right + 4} y={cy} textAnchor={v < 0 ? 'end' : 'start'} fontSize={10} fill="#30343c" fontWeight={600}>
+                        {formatAxisCurrency(v)}
+                      </text>
+                    );
+                  }}
+                />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  }
+
   // Headroom for the value labels above/below the bars.
   const pad = (max - min) * 0.1 || 1000;
   const ticks = niceTicks(min < 0 ? min - pad : 0, max + pad);
 
   return (
     <div>
-      <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-        {LEGEND.map((l) => (
-          <li key={l.kind} className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded-sm" style={{ background: COLORS[l.kind] }} aria-hidden />
-            {l.label}
-          </li>
-        ))}
-      </ul>
-      <div className="scrollbar-thin relative overflow-x-auto">
-      <div className="h-[310px] w-full min-w-[480px]" role="img" aria-label="Wasserfalldiagramm des wirtschaftlichen Nutzens im ersten Jahr. Werte siehe Rechenweg.">
+      <WaterfallLegend />
+      <div className="h-[310px] w-full" role="img" aria-label={WATERFALL_ARIA}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 16, right: 8, bottom: 8, left: 0 }} barCategoryGap="22%">
             <CartesianGrid stroke={COLORS.grid} vertical={false} />
@@ -145,7 +213,7 @@ export function WaterfallChart({ economics }: { economics: EconomicResult }) {
                 dataKey="amount"
                 position="top"
                 content={(props) => {
-                  const { x, y, width, height, value } = props as { x: number; y: number; width: number; height: number; value: number };
+                  const { x, y, width, height, value } = props as unknown as LabelBox;
                   const v = Number(value);
                   // Range bars may report a negative height; use the visual top/bottom edge either way.
                   const top = Math.min(Number(y), Number(y) + Number(height));
@@ -161,7 +229,6 @@ export function WaterfallChart({ economics }: { economics: EconomicResult }) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-      </div>
       </div>
     </div>
   );
@@ -179,6 +246,7 @@ function CumulativeTooltip({ active, payload }: { active?: boolean; payload?: { 
 }
 
 export function CumulativeChart({ economics, months = 36 }: { economics: EconomicResult; months?: number }) {
+  const narrow = useIsNarrow();
   const data = cumulativeValueSeries(economics, months);
   const payback = economics.paybackMonths;
   const showPayback = payback !== null && payback > 0 && payback <= months;
@@ -205,7 +273,13 @@ export function CumulativeChart({ economics, months = 36 }: { economics: Economi
               <ReferenceLine
                 x={payback}
                 stroke="#30343c"
-                label={{ value: `Amortisation ≈ ${formatMonths(payback)}`, position: 'insideTopLeft', fontSize: 11, fill: '#30343c' }}
+                label={{
+                  value: narrow ? `≈ ${formatMonths(payback)}` : `Amortisation ≈ ${formatMonths(payback)}`,
+                  // Keep the label inside the plot: right of the line early on, left of it later.
+                  position: payback / months > 0.55 ? 'insideTopRight' : 'insideTopLeft',
+                  fontSize: 11,
+                  fill: '#30343c',
+                }}
               />
             )}
             <Tooltip content={<CumulativeTooltip />} cursor={{ stroke: '#c3c7ce' }} isAnimationActive={false} />

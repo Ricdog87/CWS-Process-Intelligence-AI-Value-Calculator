@@ -7,12 +7,13 @@ import { PriorityBadge, SolutionBadge } from '../ui/DomainBadges';
 
 export function TopOpportunities({ rows }: { rows: PortfolioRow[] }) {
   const top = rows
-    .filter((r) => r.process.status !== 'implemented')
+    // Pilots and implemented processes are already in delivery – the CoE's next decisions lie elsewhere.
+    .filter((r) => r.process.status !== 'implemented' && r.process.status !== 'pilot')
     .sort((a, b) => b.evaluation.priority.score - a.evaluation.priority.score)
     .slice(0, 3);
 
   if (top.length === 0) {
-    return <p className="text-sm text-slate-500">Keine offenen Chancen – alle erfassten Prozesse sind bereits umgesetzt.</p>;
+    return <p className="text-sm text-slate-500">Keine offenen Chancen – alle erfassten Prozesse sind bereits im Pilot oder umgesetzt.</p>;
   }
 
   return (
@@ -33,7 +34,7 @@ export function TopOpportunities({ rows }: { rows: PortfolioRow[] }) {
                   <ArrowRight className="mt-0.5 size-4 shrink-0 text-slate-300 transition-colors group-hover:text-slate-600" aria-hidden />
                 </div>
                 <p className="text-xs text-slate-500">
-                  {departmentLabel(p.department)} · {formatCurrency(e.economics.annualCapacityValue)} Kapazitätswert p. a.
+                  {departmentLabel(p.department)} · {formatCurrency(e.economics.annualCapacityValue)} Kapazitätswert p. a.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <PriorityBadge level={e.priority.level} label={e.priority.label} score={e.priority.score} />
