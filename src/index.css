@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+  /* CWS Workwear CI (sampled from the logo): yellow #F9E244, red #EB0045, anthracite #231F20 */
+
+  /* CWS yellow – fill/accent only, never as text on white */
+  --color-brand-50: #fffbe5;
+  --color-brand-100: #fef7c7;
+  --color-brand-200: #fdf09c;
+  --color-brand-300: #fbe96e;
+  --color-brand-400: #f9e244;
+  --color-brand-500: #eccf1f;
+  --color-brand-600: #c9ab00;
+  --color-brand-700: #7a6400;
+
+  /* CWS red – primary actions and active states (white text passes WCAG AA) */
+  --color-cws-red-50: #fff0f4;
+  --color-cws-red-100: #ffd9e3;
+  --color-cws-red-200: #ffb0c6;
+  --color-cws-red-500: #eb0045;
+  --color-cws-red-600: #c8003b;
+  --color-cws-red-700: #a10030;
+
+  /* CWS anthracite */
+  --color-ink-950: #171415;
+  --color-ink-900: #231f20;
+  --color-ink-800: #2f2a2b;
+  --color-ink-700: #3d3738;
+  --color-ink-600: #575051;
+
+  --color-canvas: #f4f5f7;
+
+  /* Chart tokens (validated with the dataviz palette checker) */
+  --color-chart-potential: #2a78d6;
+  --color-chart-cash: #1baf7a;
+  --color-chart-cost: #e34948;
+  --color-chart-total: #30343c;
+  --color-chart-grid: #e6e8ec;
+  --color-chart-axis: #8a8f98;
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-pop: 0 8px 24px rgb(16 24 40 / 0.12), 0 2px 6px rgb(16 24 40 / 0.08);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-canvas text-slate-900 antialiased;
+    font-feature-settings: "kern";
+  }
+  ::selection {
+    background: var(--color-brand-200);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink-900);
+    outline-offset: 2px;
+  }
+  input[type="range"] {
+    accent-color: var(--color-ink-900);
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 180ms ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 150ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-in,
+  .animate-fade-in {
+    animation: none;
+  }
+}
+
+@media print {
+  aside,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+}
