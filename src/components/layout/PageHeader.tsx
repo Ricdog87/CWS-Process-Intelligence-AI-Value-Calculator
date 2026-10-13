@@ -24,7 +24,7 @@ export function PageHeader({ title, subtitle, actions, back, meta }: PageHeaderP
           {subtitle && <p className="mt-1 max-w-3xl text-sm text-slate-500">{subtitle}</p>}
           {meta && <div className="mt-3 flex flex-wrap items-center gap-2">{meta}</div>}
         </div>
-        {actions && <div className="no-print flex flex-wrap items-center gap-2">{actions}</div>}
+        {actions && <div className="no-print flex flex-wrap items-center gap-2 md:justify-end">{actions}</div>}
       </div>
     </header>
   );

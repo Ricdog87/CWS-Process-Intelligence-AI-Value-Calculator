@@ -4,14 +4,7 @@ import { formatCurrency, formatMonths, formatNumber, formatSignedCurrency } from
 import { CategoryBadge, SolutionBadge } from '../ui/DomainBadges';
 import { ScoreRing } from '../ui/ScoreRing';
 
-interface LivePreviewProps {
-  evaluation: ProcessEvaluation;
-  hasName: boolean;
-  /** The approach hinges on rule-based + unstructured answers; before that it would only restate default assumptions. */
-  decidingAnswersOpen: boolean;
-}
-
-export function LivePreview({ evaluation: e, hasName, decidingAnswersOpen }: LivePreviewProps) {
+export function LivePreview({ evaluation: e, hasName }: { evaluation: ProcessEvaluation; hasName: boolean }) {
   const eco = e.economics;
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-card">
@@ -48,7 +41,7 @@ export function LivePreview({ evaluation: e, hasName, decidingAnswersOpen }: Liv
 
         <div className="mt-5">
           <p className="text-xs font-medium text-slate-500">Empfohlener Lösungsansatz</p>
-          {decidingAnswersOpen ? (
+          {!e.recommendation.decided ? (
             <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
               Erscheint, sobald „Regelbasiert und repetitiv“ und „Unstrukturierte Informationen“ beantwortet sind.
             </p>

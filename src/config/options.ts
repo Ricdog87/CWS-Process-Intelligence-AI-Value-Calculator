@@ -61,7 +61,7 @@ export const YES_NO_OPTIONS: Option<YesNo>[] = [
 export const STATUSES: Option<ProcessStatus>[] = [
   { value: 'new', label: 'Neu' },
   { value: 'under_assessment', label: 'In Bewertung' },
-  { value: 'approved_discovery', label: 'Discovery freigegeben' },
+  { value: 'approved_discovery', label: 'Discovery-Freigabe' },
   { value: 'pilot', label: 'MVP / Pilot' },
   { value: 'implemented', label: 'Umgesetzt' },
 ];

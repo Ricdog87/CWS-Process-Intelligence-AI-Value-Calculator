@@ -76,6 +76,11 @@ export interface RecommendationResult {
   /** Assumptions used because answers were missing. */
   assumptions: string[];
   isPreliminary: boolean;
+  /**
+   * False while "Regelbasiert" or "Unstrukturierte Informationen" is unanswered: the approach is then only a
+   * tendency based on assumptions and the UI shows it as open instead of stating it as fact.
+   */
+  decided: boolean;
 }
 
 interface ResolvedAnswers {
@@ -228,5 +233,6 @@ export function recommendSolution(
     considerations,
     assumptions,
     isPreliminary: assumptions.length > 0,
+    decided: assessment.ruleBased !== null && assessment.unstructuredInfo !== null,
   };
 }

@@ -31,7 +31,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (message: string, tone: ToastTone = 'success') => {
       const id = nextId.current++;
       // A success supersedes earlier error messages (e.g. validation errors before a successful save).
-      setItems((list) => [...(tone === 'success' ? list.filter((t) => t.tone !== 'error') : list).slice(-2), { id, tone, message }]);
+      setItems((list) => {
+        // Same message again replaces the old toast; a success supersedes earlier errors.
+        const kept = list.filter((t) => t.message !== message && !(tone === 'success' && t.tone === 'error'));
+        return [...kept.slice(-2), { id, tone, message }];
+      });
       window.setTimeout(() => dismiss(id), tone === 'error' ? 6000 : 3500);
     },
     [dismiss],

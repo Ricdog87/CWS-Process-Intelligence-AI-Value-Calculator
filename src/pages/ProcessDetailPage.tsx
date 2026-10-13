@@ -2,6 +2,7 @@ import {
   ArrowRight,
   Calculator,
   CheckCircle2,
+  CircleHelp,
   FileQuestion,
   Flag,
   Hourglass,
@@ -41,8 +42,8 @@ function Stat({ label, value, sub, negative }: { label: string; value: ReactNode
 function Definition({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex justify-between gap-4 py-2 text-sm">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="tabular text-right font-medium text-slate-900">{value}</dd>
+      <dt className="min-w-0 hyphens-auto text-slate-500">{label}</dt>
+      <dd className="tabular shrink-0 text-right font-medium whitespace-nowrap text-slate-900">{value}</dd>
     </div>
   );
 }
@@ -173,6 +174,25 @@ export function ProcessDetailPage({ id }: { id: string }) {
           subtitle={`Regelbasiert ermittelt (Regel ${rec.ruleId}) – keine simulierte KI-Entscheidung`}
           actions={rec.isPreliminary ? <Badge tone="amber" icon={Hourglass}>Vorläufig</Badge> : undefined}
         >
+          {!rec.decided ? (
+            <div className="flex items-start gap-4">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                <CircleHelp className="size-6" aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-slate-900">Lösungsansatz noch offen</h3>
+                <p className="mt-0.5 text-sm text-slate-600">
+                  Erst wenn „Regelbasiert und repetitiv“ und „Unstrukturierte Informationen“ bewertet sind, lässt sich zwischen klassischer
+                  Automatisierung, KI und Hybrid unterscheiden.
+                </p>
+                <p className="mt-2 text-xs text-slate-500">Vorläufige Tendenz auf Basis von Annahmen: {rec.label}</p>
+                <a href={paths.processEdit(process.id)} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900">
+                  Bewertung ergänzen <ArrowRight className="size-3.5" aria-hidden />
+                </a>
+              </div>
+            </div>
+          ) : (
+          <>
           <div className="flex items-start gap-4">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-ink-900">
               <SolutionIcon className="size-6" aria-hidden />
@@ -197,6 +217,8 @@ export function ProcessDetailPage({ id }: { id: string }) {
               <span className="font-semibold">Annahmen wegen fehlender Angaben: </span>
               {rec.assumptions.join(' ')}
             </div>
+          )}
+          </>
           )}
         </Card>
       </div>
@@ -259,7 +281,7 @@ export function ProcessDetailPage({ id }: { id: string }) {
         <EstimateNote className="mt-4" />
       </Card>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <Card title="Systeme">
           {process.systems.length === 0 ? (
             <p className="text-sm text-slate-500">Keine Systeme angegeben.</p>

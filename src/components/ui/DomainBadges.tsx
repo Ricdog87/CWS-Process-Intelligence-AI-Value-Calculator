@@ -1,7 +1,7 @@
-import { Bot, CheckCircle2, CircleDot, Cog, FlaskConical, GitMerge, Hourglass, Sparkles, Wrench } from 'lucide-react';
+import { Bot, CheckCircle2, CircleDot, CircleHelp, Cog, FlaskConical, GitMerge, Hourglass, Sparkles, Wrench } from 'lucide-react';
 import type { ScoreCategoryKey, PriorityKey } from '../../config/scoringConfig';
 import { DEMO_DATA_NOTICE, STATUSES, statusLabel } from '../../config/options';
-import type { SolutionApproach } from '../../lib/recommendation';
+import type { RecommendationResult, SolutionApproach } from '../../lib/recommendation';
 import { SOLUTION_APPROACHES } from '../../lib/recommendation';
 import type { ProcessStatus } from '../../types/process';
 import { Badge, type BadgeTone } from './Badge';
@@ -33,6 +33,18 @@ export function SolutionBadge({ approach, short }: { approach: SolutionApproach;
       {short ? info.short : info.label}
     </Badge>
   );
+}
+
+/** Solution badge that shows "offen" while the deciding assessment answers are missing. */
+export function ApproachBadge({ recommendation, short }: { recommendation: RecommendationResult; short?: boolean }) {
+  if (!recommendation.decided) {
+    return (
+      <Badge tone="outline" icon={CircleHelp} title={`Vorläufige Tendenz auf Basis von Annahmen: ${recommendation.label}`}>
+        {short ? 'Offen' : 'Lösungsansatz offen'}
+      </Badge>
+    );
+  }
+  return <SolutionBadge approach={recommendation.approach} short={short} />;
 }
 
 export function solutionIcon(approach: SolutionApproach) {
@@ -96,7 +108,7 @@ export function StatusSelect({ value, onChange, label = 'Status ändern', compac
       onClick={(e) => e.stopPropagation()}
       onChange={(e) => onChange(e.target.value as ProcessStatus)}
       className={`max-w-full rounded-md border border-slate-300 bg-white text-slate-800 shadow-sm hover:border-slate-400 focus:border-ink-700 focus:ring-2 focus:ring-brand-300 focus:outline-none ${
-        compact ? 'h-8 w-36 px-2 text-xs' : 'h-9 px-2.5 text-sm'
+        compact ? 'h-8 w-40 px-2 text-xs' : 'h-9 px-2.5 text-sm'
       }`}
     >
       {STATUSES.map((s) => (

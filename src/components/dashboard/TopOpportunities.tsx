@@ -3,7 +3,7 @@ import { departmentLabel } from '../../config/options';
 import type { PortfolioRow } from '../../lib/csv';
 import { formatCurrency } from '../../lib/format';
 import { paths } from '../../state/router';
-import { PriorityBadge, SolutionBadge } from '../ui/DomainBadges';
+import { PriorityBadge, ApproachBadge } from '../ui/DomainBadges';
 
 export function TopOpportunities({ rows }: { rows: PortfolioRow[] }) {
   const top = rows
@@ -30,7 +30,7 @@ export function TopOpportunities({ rows }: { rows: PortfolioRow[] }) {
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium text-slate-900">{p.name}</p>
+                  <p className="min-w-0 font-medium break-words hyphens-auto text-slate-900">{p.name}</p>
                   <ArrowRight className="mt-0.5 size-4 shrink-0 text-slate-300 transition-colors group-hover:text-slate-600" aria-hidden />
                 </div>
                 <p className="text-xs text-slate-500">
@@ -38,7 +38,7 @@ export function TopOpportunities({ rows }: { rows: PortfolioRow[] }) {
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <PriorityBadge level={e.priority.level} label={e.priority.label} score={e.priority.score} />
-                  <SolutionBadge approach={e.recommendation.approach} />
+                  <ApproachBadge recommendation={e.recommendation} short />
                 </div>
                 <p className="mt-2 line-clamp-2 text-xs text-slate-600">
                   <span className="font-medium text-slate-700">Nächster Schritt: </span>

@@ -387,8 +387,8 @@ export function CalculatorPage({ id }: { id?: string }) {
   }, [id, ranked]);
 
   const selector = rows.length > 0 && (
-    <label className="flex min-w-0 flex-1 items-center gap-2 text-sm md:w-[22rem] md:flex-none">
-      <span className="font-medium text-slate-600">Prozess</span>
+    <label className="flex w-full min-w-0 items-center gap-2 text-sm md:w-[26rem]">
+      <span className="font-medium text-slate-600 max-sm:sr-only">Prozess</span>
       <select
         value={process?.id ?? ''}
         onChange={(e) => navigate(paths.calculator(e.target.value))}
@@ -398,7 +398,6 @@ export function CalculatorPage({ id }: { id?: string }) {
         {ranked.map(({ process: p }) => (
           <option key={p.id} value={p.id}>
             {p.name}
-            {p.isDemo ? ' (Demo)' : ''}
           </option>
         ))}
       </select>

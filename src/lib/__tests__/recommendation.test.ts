@@ -82,3 +82,33 @@ describe('status-aware next step', () => {
     expect(evaluateProcess({ ...base, status: 'new' }).nextStep.title).not.toContain('Pilot-KPIs');
   });
 });
+
+describe('decided flag', () => {
+  it('is only decided once rule-based and unstructured answers exist', () => {
+    const full: ProcessAssessment = {
+      standardization: 'high',
+      ruleBased: 'yes',
+      digitalData: 'yes',
+      integration: 'yes',
+      exceptionRate: 'low',
+      unstructuredInfo: 'no',
+      complianceConcerns: 'no',
+    };
+    expect(recommendSolution(full, 90).decided).toBe(true);
+    expect(recommendSolution({ ...full, ruleBased: null }, 70).decided).toBe(false);
+    expect(recommendSolution({ ...full, unstructuredInfo: null }, 90).decided).toBe(false);
+    // Other missing answers keep the result preliminary but decided.
+    const r = recommendSolution({ ...full, integration: null }, 80);
+    expect(r.decided).toBe(true);
+    expect(r.isPreliminary).toBe(true);
+  });
+
+  it('exports undecided approaches as open in the CSV', async () => {
+    const { createDemoProcesses } = await import('../../data/demoData');
+    const { evaluateProcess } = await import('../evaluation');
+    const { buildPortfolioCsv } = await import('../csv');
+    const p = createDemoProcesses()[0];
+    const open = { ...p, assessment: { ...p.assessment, ruleBased: null } };
+    expect(buildPortfolioCsv([{ process: open, evaluation: evaluateProcess(open) }])).toContain('Offen – Tendenz');
+  });
+});

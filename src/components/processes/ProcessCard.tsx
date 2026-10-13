@@ -5,7 +5,7 @@ import { formatCurrency, formatDate, formatNumber } from '../../lib/format';
 import { paths } from '../../state/router';
 import type { BusinessProcess } from '../../types/process';
 import { LinkButton } from '../ui/Button';
-import { CategoryBadge, DemoTag, PreliminaryBadge, PriorityBadge, SolutionBadge, StatusBadge } from '../ui/DomainBadges';
+import { CategoryBadge, DemoTag, PreliminaryBadge, PriorityBadge, ApproachBadge, StatusBadge } from '../ui/DomainBadges';
 import { ScoreRing } from '../ui/ScoreRing';
 import { DeleteProcessButton } from './DeleteProcessButton';
 
@@ -24,7 +24,7 @@ export function ProcessCard({ process: p, evaluation: e }: { process: BusinessPr
           {p.description && <p className="mt-1 line-clamp-2 text-sm text-slate-500">{p.description}</p>}
           <div className="mt-3 flex flex-wrap gap-1.5">
             <CategoryBadge category={e.score.category.key} label={e.score.category.label} />
-            <SolutionBadge approach={e.recommendation.approach} />
+            <ApproachBadge recommendation={e.recommendation} />
           </div>
           <dl className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-3">
             <div>

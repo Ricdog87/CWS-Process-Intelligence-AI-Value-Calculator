@@ -57,7 +57,7 @@ export function buildPortfolioCsv(rows: PortfolioRow[]): string {
         escapeCsvText(departmentLabel(p.department)),
         formatCsvNumber(e.score.score),
         escapeCsvText(e.score.category.label),
-        escapeCsvText(e.recommendation.label),
+        escapeCsvText(e.recommendation.decided ? e.recommendation.label : `Offen – Tendenz: ${e.recommendation.label}`),
         formatCsvNumber(eco.totalAnnualHoursSaved),
         formatCsvNumber(eco.annualCapacityValue),
         formatCsvNumber(eco.annualAvoidedReworkValue),

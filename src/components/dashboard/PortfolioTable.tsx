@@ -8,7 +8,7 @@ import { useProcessStore } from '../../state/ProcessStore';
 import { useToast } from '../../state/Toast';
 import type { Department } from '../../types/process';
 import { Button } from '../ui/Button';
-import { DemoTag, PreliminaryBadge, PriorityBadge, SolutionBadge, StatusSelect } from '../ui/DomainBadges';
+import { DemoTag, PreliminaryBadge, PriorityBadge, ApproachBadge, StatusSelect } from '../ui/DomainBadges';
 import { EmptyState } from '../ui/EmptyState';
 import { ScoreBar } from '../ui/ScoreRing';
 
@@ -184,7 +184,7 @@ export function PortfolioTable({ rows, totalCount, filter, onFilterChange }: Pro
                     <ScoreBar score={e.score.score} category={e.score.category.key} />
                   </td>
                   <td className="px-2 py-3">
-                    <SolutionBadge approach={e.recommendation.approach} short />
+                    <ApproachBadge recommendation={e.recommendation} short />
                   </td>
                   <td className="tabular px-2 py-3 text-right font-medium whitespace-nowrap text-slate-900">
                     {formatCurrency(e.economics.annualCapacityValue)}

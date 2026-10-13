@@ -148,7 +148,7 @@ export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel 
 
   return (
     <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="min-w-0 space-y-6">
+      <div className="min-w-0 space-y-6 lg:col-start-1 lg:row-start-1">
         <FormSection step={1} title="Allgemeine Informationen" description="Worum geht es, und welcher Fachbereich ist zuständig?">
           <TextField
             className="md:col-span-2"
@@ -350,29 +350,26 @@ export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel 
             error={errorFor('scenario.annualHardSavings')}
           />
         </FormSection>
-
-        <div className="flex flex-col-reverse gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-500">
-            <span className="text-rose-600">*</span> Pflichtfelder. Bitte nur fiktive oder freigegebene Daten verwenden – keine personenbezogenen Daten.
-          </p>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button icon={X} onClick={() => (dirty ? setConfirmCancel(true) : onCancel())}>
-              Abbrechen
-            </Button>
-            <Button type="submit" variant="primary" icon={Save}>
-              {mode === 'create' ? 'Prozess speichern & bewerten' : 'Änderungen speichern'}
-            </Button>
-          </div>
-        </div>
       </div>
 
-      <aside className="lg:sticky lg:top-6 lg:self-start">
-        <LivePreview
-          evaluation={preview}
-          hasName={values.name.trim().length > 0}
-          decidingAnswersOpen={values.assessment.ruleBased === null || values.assessment.unstructuredInfo === null}
-        />
+      <aside className="lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
+        <LivePreview evaluation={preview} hasName={values.name.trim().length > 0} />
       </aside>
+
+      {/* On phones this sits below the live assessment, so the result is visible before saving. */}
+      <div className="flex flex-col-reverse gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-card sm:flex-row sm:items-center sm:justify-between lg:col-start-1 lg:row-start-2">
+        <p className="text-xs text-slate-500">
+          <span className="text-rose-600">*</span> Pflichtfelder. Bitte nur fiktive oder freigegebene Daten verwenden – keine personenbezogenen Daten.
+        </p>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row">
+          <Button icon={X} onClick={() => (dirty ? setConfirmCancel(true) : onCancel())}>
+            Abbrechen
+          </Button>
+          <Button type="submit" variant="primary" icon={Save}>
+            {mode === 'create' ? 'Prozess speichern & bewerten' : 'Änderungen speichern'}
+          </Button>
+        </div>
+      </div>
 
       <ConfirmDialog
         open={confirmCancel}

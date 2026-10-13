@@ -13,7 +13,7 @@ import {
   YAxis,
 } from 'recharts';
 import { cumulativeValueSeries, type EconomicResult } from '../../lib/calculations';
-import { useIsNarrow } from '../../hooks';
+import { useElementWidth, useIsNarrow } from '../../hooks';
 import { formatAxisCurrency, formatCurrency, formatMonths } from '../../lib/format';
 
 /** Chart colors – validated with the dataviz palette checker (relief via direct labels). */
@@ -125,111 +125,113 @@ interface LabelBox {
   value: number;
 }
 
+/** Below this chart width the six columns' category labels would collide – switch to horizontal bars. */
+const COLUMN_LAYOUT_MIN_WIDTH = 560;
+
+function HorizontalWaterfall({ data, min, max }: { data: Step[]; min: number; max: number }) {
+  const span = max - min || 1000;
+  // Value labels always sit right of the bar end, so the right side needs the headroom.
+  const raw = niceTicks(min < 0 ? min - span * 0.08 : 0, max + span * 0.42, 3);
+  const ticks = Array.from(new Set([raw[0], ...(raw[0] < 0 ? [0] : []), raw[raw.length - 1]]));
+  return (
+    <div className="h-[268px] w-full" role="img" aria-label={WATERFALL_ARIA}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart layout="vertical" data={data} margin={{ top: 4, right: 8, bottom: 4, left: 0 }} barCategoryGap="26%">
+          <CartesianGrid stroke={COLORS.grid} horizontal={false} />
+          <XAxis
+            type="number"
+            domain={[raw[0], raw[raw.length - 1]]}
+            ticks={ticks}
+            tickFormatter={(v: number) => formatAxisCurrency(v)}
+            tick={{ fontSize: 10, fill: COLORS.axis }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis type="category" dataKey="name" width={112} tick={{ fontSize: 11, fill: COLORS.axis }} tickLine={false} axisLine={false} interval={0} />
+          <ReferenceLine x={0} stroke="#8a8f98" />
+          <Tooltip content={<WaterfallTooltip />} cursor={{ fill: 'rgba(15,23,42,0.04)' }} isAnimationActive={false} />
+          <Bar dataKey="range" radius={[4, 4, 4, 4]} maxBarSize={22} isAnimationActive={false}>
+            {data.map((d) => (
+              <Cell key={d.name} fill={COLORS[d.kind]} />
+            ))}
+            <LabelList
+              dataKey="amount"
+              content={(props) => {
+                const { x, y, width, height, value } = props as unknown as LabelBox;
+                const right = Math.max(Number(x), Number(x) + Number(width));
+                return (
+                  <text x={right + 4} y={Number(y) + Number(height) / 2 + 4} textAnchor="start" fontSize={10} fill="#30343c" fontWeight={600}>
+                    {formatAxisCurrency(Number(value))}
+                  </text>
+                );
+              }}
+            />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function ColumnWaterfall({ data, min, max }: { data: Step[]; min: number; max: number }) {
+  // Value labels always sit above the bar top (the minus sign carries the direction), so only the top needs headroom.
+  const pad = (max - min) * 0.12 || 1000;
+  const ticks = niceTicks(min, max + pad);
+  return (
+    <div className="h-[310px] w-full" role="img" aria-label={WATERFALL_ARIA}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 16, right: 8, bottom: 8, left: 0 }} barCategoryGap="22%">
+          <CartesianGrid stroke={COLORS.grid} vertical={false} />
+          <XAxis dataKey="name" tick={<CategoryTick />} tickLine={false} axisLine={false} interval={0} height={36} />
+          <YAxis
+            domain={[ticks[0], ticks[ticks.length - 1]]}
+            ticks={ticks}
+            tickFormatter={(v: number) => formatAxisCurrency(v)}
+            tick={{ fontSize: 11, fill: COLORS.axis }}
+            tickLine={false}
+            axisLine={false}
+            width={64}
+          />
+          <ReferenceLine y={0} stroke="#8a8f98" />
+          <Tooltip content={<WaterfallTooltip />} cursor={{ fill: 'rgba(15,23,42,0.04)' }} isAnimationActive={false} />
+          <Bar dataKey="range" radius={[4, 4, 4, 4]} maxBarSize={56} isAnimationActive={false}>
+            {data.map((d) => (
+              <Cell key={d.name} fill={COLORS[d.kind]} />
+            ))}
+            <LabelList
+              dataKey="amount"
+              content={(props) => {
+                const { x, y, width, height, value } = props as unknown as LabelBox;
+                // Range bars may report a negative height; use the visual top edge either way.
+                const top = Math.min(Number(y), Number(y) + Number(height));
+                return (
+                  <text x={Number(x) + Number(width) / 2} y={top - 6} textAnchor="middle" fontSize={11} fill="#30343c" fontWeight={600}>
+                    {formatAxisCurrency(Number(value))}
+                  </text>
+                );
+              }}
+            />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 export function WaterfallChart({ economics }: { economics: EconomicResult }) {
-  const narrow = useIsNarrow();
+  const narrowViewport = useIsNarrow();
+  const [ref, width] = useElementWidth<HTMLDivElement>();
   const data = buildWaterfall(economics);
   const allValues = data.flatMap((d) => d.range);
   const min = Math.min(0, ...allValues);
   const max = Math.max(0, ...allValues);
-
-  // Phones: horizontal bars, so category names get a full row instead of colliding below narrow columns.
-  if (narrow) {
-    const pad = (max - min) * 0.28 || 1000;
-    const ticks = niceTicks(min < 0 ? min - pad : 0, max + pad, 3);
-    return (
-      <div>
-        <WaterfallLegend />
-        <div className="h-[268px] w-full" role="img" aria-label={WATERFALL_ARIA}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart layout="vertical" data={data} margin={{ top: 4, right: 8, bottom: 4, left: 0 }} barCategoryGap="26%">
-              <CartesianGrid stroke={COLORS.grid} horizontal={false} />
-              <XAxis
-                type="number"
-                domain={[ticks[0], ticks[ticks.length - 1]]}
-                ticks={ticks}
-                tickFormatter={(v: number) => formatAxisCurrency(v)}
-                tick={{ fontSize: 10, fill: COLORS.axis }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis type="category" dataKey="name" width={112} tick={{ fontSize: 11, fill: COLORS.axis }} tickLine={false} axisLine={false} interval={0} />
-              <ReferenceLine x={0} stroke="#8a8f98" />
-              <Tooltip content={<WaterfallTooltip />} cursor={{ fill: 'rgba(15,23,42,0.04)' }} isAnimationActive={false} />
-              <Bar dataKey="range" radius={[4, 4, 4, 4]} maxBarSize={22} isAnimationActive={false}>
-                {data.map((d) => (
-                  <Cell key={d.name} fill={COLORS[d.kind]} />
-                ))}
-                <LabelList
-                  dataKey="amount"
-                  content={(props) => {
-                    const { x, y, width, height, value } = props as unknown as LabelBox;
-                    const v = Number(value);
-                    const left = Math.min(Number(x), Number(x) + Number(width));
-                    const right = Math.max(Number(x), Number(x) + Number(width));
-                    const cy = Number(y) + Number(height) / 2 + 4;
-                    return (
-                      <text x={v < 0 ? left - 4 : right + 4} y={cy} textAnchor={v < 0 ? 'end' : 'start'} fontSize={10} fill="#30343c" fontWeight={600}>
-                        {formatAxisCurrency(v)}
-                      </text>
-                    );
-                  }}
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    );
-  }
-
-  // Headroom for the value labels above/below the bars.
-  const pad = (max - min) * 0.1 || 1000;
-  const ticks = niceTicks(min < 0 ? min - pad : 0, max + pad);
+  // Decide by the chart's own width (two-column layouts on wide screens make it narrow too).
+  const horizontal = width > 0 ? width < COLUMN_LAYOUT_MIN_WIDTH : narrowViewport;
 
   return (
-    <div>
+    <div ref={ref}>
       <WaterfallLegend />
-      <div className="h-[310px] w-full" role="img" aria-label={WATERFALL_ARIA}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 16, right: 8, bottom: 8, left: 0 }} barCategoryGap="22%">
-            <CartesianGrid stroke={COLORS.grid} vertical={false} />
-            <XAxis dataKey="name" tick={<CategoryTick />} tickLine={false} axisLine={false} interval={0} height={36} />
-            <YAxis
-              domain={[ticks[0], ticks[ticks.length - 1]]}
-              ticks={ticks}
-              tickFormatter={(v: number) => formatAxisCurrency(v)}
-              tick={{ fontSize: 11, fill: COLORS.axis }}
-              tickLine={false}
-              axisLine={false}
-              width={64}
-            />
-            <ReferenceLine y={0} stroke="#8a8f98" />
-            <Tooltip content={<WaterfallTooltip />} cursor={{ fill: 'rgba(15,23,42,0.04)' }} isAnimationActive={false} />
-            <Bar dataKey="range" radius={[4, 4, 4, 4]} maxBarSize={56} isAnimationActive={false}>
-              {data.map((d) => (
-                <Cell key={d.name} fill={COLORS[d.kind]} />
-              ))}
-              <LabelList
-                dataKey="amount"
-                position="top"
-                content={(props) => {
-                  const { x, y, width, height, value } = props as unknown as LabelBox;
-                  const v = Number(value);
-                  // Range bars may report a negative height; use the visual top/bottom edge either way.
-                  const top = Math.min(Number(y), Number(y) + Number(height));
-                  const bottom = Math.max(Number(y), Number(y) + Number(height));
-                  const labelY = v < 0 ? bottom + 14 : top - 6;
-                  return (
-                    <text x={Number(x) + Number(width) / 2} y={labelY} textAnchor="middle" fontSize={11} fill="#30343c" fontWeight={600}>
-                      {formatAxisCurrency(v)}
-                    </text>
-                  );
-                }}
-              />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {horizontal ? <HorizontalWaterfall data={data} min={min} max={max} /> : <ColumnWaterfall data={data} min={min} max={max} />}
     </div>
   );
 }
@@ -250,6 +252,9 @@ export function CumulativeChart({ economics, months = 36 }: { economics: Economi
   const data = cumulativeValueSeries(economics, months);
   const payback = economics.paybackMonths;
   const showPayback = payback !== null && payback > 0 && payback <= months;
+  // Always include the 0 € line so break-even is visible even when the whole curve is negative.
+  const values = data.map((p) => p.value);
+  const yTicks = niceTicks(Math.min(0, ...values), Math.max(0, ...values), 4);
 
   return (
     <div>
@@ -267,7 +272,15 @@ export function CumulativeChart({ economics, months = 36 }: { economics: Economi
               tickLine={false}
               axisLine={{ stroke: '#d4d7dd' }}
             />
-            <YAxis tickFormatter={(v: number) => formatAxisCurrency(v)} tick={{ fontSize: 11, fill: COLORS.axis }} tickLine={false} axisLine={false} width={64} />
+            <YAxis
+              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+              ticks={yTicks}
+              tickFormatter={(v: number) => formatAxisCurrency(v)}
+              tick={{ fontSize: 11, fill: COLORS.axis }}
+              tickLine={false}
+              axisLine={false}
+              width={64}
+            />
             <ReferenceLine y={0} stroke="#8a8f98" />
             {showPayback && (
               <ReferenceLine
@@ -290,12 +303,22 @@ export function CumulativeChart({ economics, months = 36 }: { economics: Economi
               strokeWidth={2}
               fill={COLORS.potential}
               fillOpacity={0.1}
+              baseValue={0}
               isAnimationActive={false}
               activeDot={{ r: 4, stroke: '#ffffff', strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
+      {!showPayback && (
+        <p className="mt-2 text-xs text-slate-500">
+          {payback === null
+            ? 'Keine Amortisation: Der laufende Nutzen deckt die Betriebskosten nicht.'
+            : payback === 0
+              ? 'Keine Investition erfasst – der Nutzen wirkt ab Monat 1.'
+              : `Amortisation erst nach ${formatMonths(payback)} – außerhalb des dargestellten Zeitraums von ${months} Monaten.`}
+        </p>
+      )}
     </div>
   );
 }

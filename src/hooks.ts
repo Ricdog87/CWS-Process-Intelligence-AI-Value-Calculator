@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PortfolioRow } from './lib/csv';
 import { useProcessStore } from './state/ProcessStore';
 
@@ -15,6 +15,23 @@ export function useIsNarrow(maxWidth = 640): boolean {
     return () => mq.removeEventListener('change', update);
   }, [query]);
   return matches;
+}
+
+/** Width of an element, kept up to date with a ResizeObserver (0 until mounted). */
+export function useElementWidth<T extends HTMLElement>(): [(node: T | null) => void, number] {
+  const [width, setWidth] = useState(0);
+  const observer = useRef<ResizeObserver | null>(null);
+  const ref = useCallback((node: T | null) => {
+    observer.current?.disconnect();
+    observer.current = null;
+    if (!node) return;
+    setWidth(node.getBoundingClientRect().width);
+    if (typeof ResizeObserver === 'undefined') return;
+    observer.current = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.current.observe(node);
+  }, []);
+  useEffect(() => () => observer.current?.disconnect(), []);
+  return [ref, width];
 }
 
 /** All processes joined with their evaluation. */
