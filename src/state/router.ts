@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 export type Route =
+  | { name: 'cockpit' }
   | { name: 'dashboard' }
   | { name: 'processes' }
   | { name: 'process-new' }
@@ -8,13 +9,15 @@ export type Route =
   | { name: 'process-edit'; id: string }
   | { name: 'calculator'; id?: string }
   | { name: 'methodology' }
+  | { name: 'pricing' }
   | { name: 'not-found' };
 
 export function parseHash(hash: string): Route {
   const path = hash.replace(/^#/, '').replace(/\/+$/, '') || '/';
   const parts = path.split('/').filter(Boolean).map(decodeURIComponent);
 
-  if (parts.length === 0 || (parts[0] === 'dashboard' && parts.length === 1)) return { name: 'dashboard' };
+  if (parts.length === 0 || (parts[0] === 'cockpit' && parts.length === 1)) return { name: 'cockpit' };
+  if (parts[0] === 'dashboard' && parts.length === 1) return { name: 'dashboard' };
   if (parts[0] === 'processes') {
     if (parts.length === 1) return { name: 'processes' };
     if (parts[1] === 'new' && parts.length === 2) return { name: 'process-new' };
@@ -26,10 +29,12 @@ export function parseHash(hash: string): Route {
     if (parts.length === 2) return { name: 'calculator', id: parts[1] };
   }
   if (parts[0] === 'methodology' && parts.length === 1) return { name: 'methodology' };
+  if (parts[0] === 'pricing' && parts.length === 1) return { name: 'pricing' };
   return { name: 'not-found' };
 }
 
 export const paths = {
+  cockpit: () => '#/cockpit',
   dashboard: () => '#/dashboard',
   processes: () => '#/processes',
   processNew: () => '#/processes/new',
@@ -37,6 +42,7 @@ export const paths = {
   processEdit: (id: string) => `#/processes/${encodeURIComponent(id)}/edit`,
   calculator: (id?: string) => (id ? `#/calculator/${encodeURIComponent(id)}` : '#/calculator'),
   methodology: () => '#/methodology',
+  pricing: () => '#/pricing',
 };
 
 export function navigate(to: string, options: { replace?: boolean } = {}): void {

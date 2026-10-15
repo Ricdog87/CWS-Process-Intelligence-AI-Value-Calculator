@@ -13,6 +13,7 @@ import {
 import type { ReactNode } from 'react';
 import { DemoNotice, EstimateNote } from '../components/layout/DemoNotice';
 import { PageHeader } from '../components/layout/PageHeader';
+import { AiPlatformCard } from '../components/ai/AiPlatformCard';
 import { DeleteProcessButton } from '../components/processes/DeleteProcessButton';
 import { InsightList } from '../components/processes/InsightList';
 import { ScoreBreakdown } from '../components/processes/ScoreBreakdown';
@@ -63,7 +64,7 @@ export function ProcessDetailPage({ id }: { id: string }) {
           icon={FileQuestion}
           title="Prozess nicht gefunden"
           text="Der Prozess existiert nicht (mehr). Möglicherweise wurde er gelöscht."
-          actions={<LinkButton href={paths.processes()}>Zur Prozessliste</LinkButton>}
+          actions={<LinkButton href={paths.processes()}>Zu den Use Cases</LinkButton>}
         />
       </Card>
     );
@@ -77,7 +78,7 @@ export function ProcessDetailPage({ id }: { id: string }) {
   return (
     <>
       <PageHeader
-        back={{ href: paths.processes(), label: 'Zur Prozessliste' }}
+        back={{ href: paths.processes(), label: 'Zu den Use Cases' }}
         title={process.name}
         subtitle={process.description || undefined}
         meta={
@@ -100,7 +101,7 @@ export function ProcessDetailPage({ id }: { id: string }) {
               }}
             />
             <LinkButton href={paths.calculator(process.id)} variant="dark" icon={Calculator}>
-              Wertrechner
+              Business Case
             </LinkButton>
             <LinkButton href={paths.processEdit(process.id)} icon={Pencil}>
               Bearbeiten
@@ -242,6 +243,8 @@ export function ProcessDetailPage({ id }: { id: string }) {
         </div>
       </section>
 
+      <AiPlatformCard process={process} evaluation={evaluation} />
+
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card title="Stärken" subtitle="Was für eine Automatisierung spricht">
           <InsightList items={score.strengths} icon={CheckCircle2} iconClassName="text-emerald-600" empty="Noch keine ausgeprägten Stärken erkennbar." />
@@ -261,7 +264,7 @@ export function ProcessDetailPage({ id }: { id: string }) {
         subtitle="Schätzung auf Basis der erfassten Annahmen"
         actions={
           <LinkButton href={paths.calculator(process.id)} size="sm" variant="dark" icon={Calculator}>
-            Szenario im Wertrechner anpassen
+            Szenario im Business Case anpassen
           </LinkButton>
         }
       >

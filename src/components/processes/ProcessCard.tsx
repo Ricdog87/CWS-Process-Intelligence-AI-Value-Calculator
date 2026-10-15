@@ -51,7 +51,7 @@ export function ProcessCard({ process: p, evaluation: e }: { process: BusinessPr
         </div>
         <div className="flex items-center gap-1">
           <LinkButton size="sm" variant="ghost" icon={Calculator} href={paths.calculator(p.id)}>
-            Wertrechner
+            Business Case
           </LinkButton>
           <LinkButton size="sm" variant="ghost" icon={Pencil} href={paths.processEdit(p.id)}>
             Bearbeiten

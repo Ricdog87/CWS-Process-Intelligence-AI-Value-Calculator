@@ -1,3 +1,5 @@
+import type { AiProfileInput } from './ai';
+
 /**
  * Domain model for CWS Process Intelligence.
  * All enum-like values are stored as stable string keys; German labels live in config/options.ts.
@@ -79,6 +81,8 @@ export interface BusinessProcess {
   metrics: ProcessMetrics;
   assessment: ProcessAssessment;
   scenario: AutomationScenario;
+  /** AI usage profile overrides; null fields are detected automatically. */
+  aiProfile: AiProfileInput;
   status: ProcessStatus;
   /** Fictional sample record – never actual CWS figures. */
   isDemo: boolean;

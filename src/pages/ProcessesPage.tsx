@@ -28,7 +28,7 @@ export function ProcessesPage() {
   return (
     <>
       <PageHeader
-        title="Prozesse"
+        title="Use Cases"
         subtitle="Wiederkehrende Geschäftsprozesse erfassen, bewerten und verwalten. Jede Erfassung erhält sofort einen nachvollziehbaren Automation Score."
         actions={
           <LinkButton href={paths.processNew()} variant="primary" icon={Plus}>

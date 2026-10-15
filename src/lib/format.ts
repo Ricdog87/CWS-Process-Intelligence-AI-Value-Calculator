@@ -57,6 +57,16 @@ export function formatAxisCurrency(value: number): string {
   return `${sign}${formatNumber(abs, 0)} €`;
 }
 
+/** Unit costs that can be fractions of a cent: "0,045 ct", "0,12 €", "28,10 €". */
+export function formatUnitCost(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return '–';
+  const abs = Math.abs(value);
+  if (abs === 0) return '0 €';
+  if (abs < 0.01) return `${formatNumber(value * 100, abs < 0.0001 ? 4 : 3)} ct`;
+  if (abs < 1) return `${formatNumber(value, 3)} €`;
+  return `${formatNumber(value, 2)} €`;
+}
+
 /** Currency with explicit sign, e.g. "+12.000 €" / "−4.000 €". */
 export function formatSignedCurrency(value: number): string {
   const v = clean(Math.round(value));
@@ -93,9 +103,9 @@ export function formatDate(iso: string): string {
 }
 
 /** Formats a raw number for an input field (no thousands grouping noise for small numbers). */
-export function formatInputNumber(value: number | null): string {
+export function formatInputNumber(value: number | null, decimals = 2): string {
   if (value === null || !Number.isFinite(value)) return '';
-  return new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 2, useGrouping: true }).format(value);
+  return new Intl.NumberFormat(LOCALE, { maximumFractionDigits: decimals, useGrouping: true }).format(value);
 }
 
 /**
@@ -108,7 +118,8 @@ export function parseNumberInput(raw: string): number | null {
   let normalized: string;
   if (text.includes(',')) {
     normalized = text.replace(/\./g, '').replace(',', '.');
-  } else if (/^-?\d{1,3}(\.\d{3})+$/.test(text)) {
+  } else if (/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(text)) {
+    // "1.234" is a thousands separator; "0.055" stays a decimal.
     normalized = text.replace(/\./g, '');
   } else {
     normalized = text;

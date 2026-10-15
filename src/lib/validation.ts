@@ -13,7 +13,8 @@ export type FieldKey =
   | 'description'
   | 'otherSystems'
   | `metrics.${keyof ProcessDraft['metrics']}`
-  | `scenario.${keyof ProcessDraft['scenario']}`;
+  | `scenario.${keyof ProcessDraft['scenario']}`
+  | `aiProfile.${keyof ProcessDraft['aiProfile']}`;
 
 export type FieldMessages = Partial<Record<FieldKey, string>>;
 
@@ -76,6 +77,15 @@ export function validateProcess(values: ProcessFormValues): ValidationResult {
   set('scenario.implementationCost', checkNumber(s.implementationCost, { min: 0, max: 100_000_000 }));
   set('scenario.monthlyOperatingCost', checkNumber(s.monthlyOperatingCost, { min: 0, max: 10_000_000 }));
   set('scenario.annualHardSavings', checkNumber(s.annualHardSavings, { min: 0, max: 100_000_000 }));
+
+  const ai = values.aiProfile;
+  set('aiProfile.inputTokensPerTransaction', checkNumber(ai.inputTokensPerTransaction, { min: 0, max: 2_000_000, integer: true }));
+  set('aiProfile.outputTokensPerTransaction', checkNumber(ai.outputTokensPerTransaction, { min: 0, max: 200_000, integer: true }));
+  set('aiProfile.usersInvolved', checkNumber(ai.usersInvolved, { min: 1, max: 100_000, integer: true }));
+  set('aiProfile.usersWithCopilot', checkNumber(ai.usersWithCopilot, { min: 0, max: 100_000, integer: true }));
+  if (!errors['aiProfile.usersWithCopilot'] && ai.usersWithCopilot !== null && ai.usersInvolved !== null && ai.usersWithCopilot > ai.usersInvolved) {
+    errors['aiProfile.usersWithCopilot'] = 'Kann nicht größer sein als die Zahl der beteiligten Nutzer.';
+  }
 
   // Plausibility hints – only when the value itself is valid.
   if (!errors['metrics.hourlyCost'] && m.hourlyCost !== null) {

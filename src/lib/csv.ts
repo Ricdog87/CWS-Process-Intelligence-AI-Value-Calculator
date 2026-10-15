@@ -2,6 +2,7 @@
  * CSV export for the opportunity portfolio.
  * Semicolon separator, decimal comma and UTF-8 BOM so the file opens correctly in German Excel.
  */
+import { SECURITY_TIERS } from '../config/aiConfig';
 import { DEMO_DATA_NOTICE, departmentLabel, statusLabel } from '../config/options';
 import type { BusinessProcess } from '../types/process';
 import type { ProcessEvaluation } from './evaluation';
@@ -37,7 +38,15 @@ const HEADERS = [
   'Qualitätsnutzen p. a. (EUR)',
   'Harte Einsparungen p. a. (EUR)',
   'Implementierungskosten (EUR)',
-  'Betriebskosten p. a. (EUR)',
+  'Betriebskosten ohne KI p. a. (EUR)',
+  'KI-Entscheidung',
+  'Copilot-Check',
+  'Empfohlene KI-Plattform',
+  'Sicherheitsstufe',
+  'KI-Nutzungskosten p. a. (EUR)',
+  'KI-Kosten je Vorgang (EUR)',
+  'Mehrkosten Sicherheit p. a. (EUR)',
+  'Netto-Nutzen laufend p. a. (EUR)',
   'Netto-Nutzen Jahr 1 (EUR)',
   'Amortisation (Monate)',
   'Prioritätsscore',
@@ -51,6 +60,8 @@ export function buildPortfolioCsv(rows: PortfolioRow[]): string {
   const lines = [HEADERS.map(escapeCsvText).join(SEPARATOR)];
   for (const { process: p, evaluation: e } of rows) {
     const eco = e.economics;
+    const rec = e.ai.recommendation;
+    const platform = rec.llmNeeded ? rec.recommended : null;
     lines.push(
       [
         escapeCsvText(p.name),
@@ -64,6 +75,14 @@ export function buildPortfolioCsv(rows: PortfolioRow[]): string {
         formatCsvNumber(eco.annualHardSavings),
         formatCsvNumber(p.scenario.implementationCost),
         formatCsvNumber(eco.annualOperatingCosts),
+        escapeCsvText(e.ai.decision.label),
+        escapeCsvText(rec.copilot.title),
+        escapeCsvText(platform ? platform.option.name : rec.llmNeeded ? 'keine freigegebene Option' : 'ohne KI'),
+        escapeCsvText(platform ? SECURITY_TIERS[platform.option.tier].label : ''),
+        formatCsvNumber(eco.annualAiRunCost, 2),
+        platform && e.ai.annualRunCost > 0 ? formatCsvNumber(platform.costPerTransactionEur, 5) : '',
+        formatCsvNumber(platform ? rec.securityPremiumEur : 0, 2),
+        formatCsvNumber(eco.annualRecurringNetValue),
         formatCsvNumber(eco.firstYearNetBenefit),
         eco.paybackMonths === null ? escapeCsvText('nicht erreichbar') : formatCsvNumber(eco.paybackMonths, 1),
         formatCsvNumber(e.priority.score),

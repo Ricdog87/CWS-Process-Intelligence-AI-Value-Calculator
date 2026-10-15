@@ -41,9 +41,12 @@ describe('portfolio', () => {
 
 describe('router', () => {
   it.each([
-    ['', { name: 'dashboard' }],
-    ['#/', { name: 'dashboard' }],
+    ['', { name: 'cockpit' }],
+    ['#/', { name: 'cockpit' }],
+    ['#/cockpit', { name: 'cockpit' }],
+    ['#/cockpit/x', { name: 'not-found' }],
     ['#/dashboard', { name: 'dashboard' }],
+    ['#/pricing', { name: 'pricing' }],
     ['#/processes', { name: 'processes' }],
     ['#/processes/new', { name: 'process-new' }],
     ['#/processes/abc', { name: 'process-detail', id: 'abc' }],

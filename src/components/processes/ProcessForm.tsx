@@ -10,9 +10,13 @@ import {
   YES_PARTIAL_NO_OPTIONS,
   YES_UNKNOWN_NO_OPTIONS,
 } from '../../config/options';
+import { COMPLEXITIES, DATA_SENSITIVITIES, INTERACTION_MODES, TASK_TYPES } from '../../config/aiConfig';
+import { resolveAiProfile } from '../../lib/aiProfile';
 import { evaluateProcess } from '../../lib/evaluation';
 import { validateProcess, type FieldKey, type ProcessFormValues } from '../../lib/validation';
+import { useProcessStore } from '../../state/ProcessStore';
 import { useToast } from '../../state/Toast';
+import { EMPTY_AI_PROFILE, type AiProfileInput } from '../../types/ai';
 import type { AutomationScenario, BusinessProcess, ProcessAssessment, ProcessDraft, ProcessMetrics } from '../../types/process';
 import { Button } from '../ui/Button';
 import { ChipCheckboxGroup, NumberField, SegmentedField, SelectField, TextArea, TextField } from '../ui/FormFields';
@@ -49,6 +53,7 @@ export function emptyFormValues(): ProcessFormValues {
       monthlyOperatingCost: null,
       annualHardSavings: null,
     },
+    aiProfile: { ...EMPTY_AI_PROFILE },
     status: 'new',
   };
 }
@@ -63,6 +68,7 @@ export function formValuesFromProcess(p: BusinessProcess): ProcessFormValues {
     metrics: { ...p.metrics },
     assessment: { ...p.assessment },
     scenario: { ...p.scenario },
+    aiProfile: { ...p.aiProfile },
     status: p.status,
   };
 }
@@ -92,6 +98,7 @@ interface ProcessFormProps {
 
 export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel }: ProcessFormProps) {
   const { notify } = useToast();
+  const { aiContext } = useProcessStore();
   const [values, setValues] = useState<ProcessFormValues>(initial);
   const [touched, setTouched] = useState<Set<FieldKey>>(new Set());
   const [submitted, setSubmitted] = useState(false);
@@ -110,8 +117,16 @@ export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel 
       createdAt: now,
       updatedAt: now,
     };
-    return evaluateProcess(process);
-  }, [values, isDemo]);
+    return evaluateProcess(process, aiContext);
+  }, [values, isDemo, aiContext]);
+
+  // What detection would choose without manual overrides – shown as "Automatisch: …".
+  const detected = useMemo(
+    () => resolveAiProfile({ ...values, department: values.department || 'other', aiProfile: EMPTY_AI_PROFILE }, aiContext.settings),
+    [values, aiContext.settings],
+  );
+  const autoLabel = <T extends string>(options: { value: T; label: string }[], value: T) =>
+    `Automatisch: ${options.find((o) => o.value === value)?.label ?? value}`;
 
   const touch = (key: FieldKey) => setTouched((t) => (t.has(key) ? t : new Set(t).add(key)));
   const errorFor = (key: FieldKey) => (submitted || touched.has(key) ? validation.errors[key] : undefined);
@@ -121,6 +136,8 @@ export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel 
     setValues((v) => ({ ...v, metrics: { ...v.metrics, [key]: value } }));
   const setAssessment = <K extends keyof ProcessAssessment>(key: K, value: ProcessAssessment[K]) =>
     setValues((v) => ({ ...v, assessment: { ...v.assessment, [key]: value } }));
+  const setAi = <K extends keyof AiProfileInput>(key: K, value: AiProfileInput[K]) =>
+    setValues((v) => ({ ...v, aiProfile: { ...v.aiProfile, [key]: value } }));
   const setScenario = <K extends keyof AutomationScenario>(key: K, value: AutomationScenario[K]) =>
     setValues((v) => ({ ...v, scenario: { ...v.scenario, [key]: value } }));
 
@@ -328,7 +345,7 @@ export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel 
             error={errorFor('scenario.implementationCost')}
           />
           <NumberField
-            label="Monatliche Betriebskosten"
+            label="Monatliche Betriebskosten (ohne KI-Nutzung)"
             unit="€/Mon."
             placeholder="z. B. 800"
             tooltip={HELP.monthlyOperatingCost}
@@ -348,6 +365,86 @@ export function ProcessForm({ initial, mode, isDemo = false, onSubmit, onCancel 
             onChange={(v) => setScenario('annualHardSavings', v)}
             onBlur={() => touch('scenario.annualHardSavings')}
             error={errorFor('scenario.annualHardSavings')}
+          />
+        </FormSection>
+
+        <FormSection
+          step={5}
+          title="KI-Einsatz & Datenschutz"
+          description="Wird automatisch aus Beschreibung und Bewertung erkannt. Nur anpassen, wenn die Erkennung nicht passt."
+        >
+          <SelectField
+            label="Aufgabentyp"
+            value={values.aiProfile.taskType ?? ''}
+            options={TASK_TYPES}
+            placeholder={autoLabel(TASK_TYPES, detected.taskType)}
+            tooltip={HELP.aiTaskType}
+            onChange={(v) => setAi('taskType', v || null)}
+          />
+          <SelectField
+            label="Betriebsart"
+            value={values.aiProfile.interactionMode ?? ''}
+            options={INTERACTION_MODES}
+            placeholder={autoLabel(INTERACTION_MODES, detected.interactionMode)}
+            tooltip={HELP.aiInteractionMode}
+            onChange={(v) => setAi('interactionMode', v || null)}
+          />
+          <SelectField
+            label="Datenklassifizierung"
+            value={values.aiProfile.dataSensitivity ?? ''}
+            options={DATA_SENSITIVITIES}
+            placeholder={autoLabel(DATA_SENSITIVITIES, detected.dataSensitivity)}
+            tooltip={HELP.aiDataSensitivity}
+            hint="Steuert, welche Plattformen freigegeben sind."
+            onChange={(v) => setAi('dataSensitivity', v || null)}
+          />
+          <SelectField
+            label="Komplexität"
+            value={values.aiProfile.complexity ?? ''}
+            options={COMPLEXITIES}
+            placeholder={autoLabel(COMPLEXITIES, detected.complexity)}
+            tooltip={HELP.aiComplexity}
+            onChange={(v) => setAi('complexity', v || null)}
+          />
+          <NumberField
+            label="Input-Tokens je Vorgang"
+            unit="Tokens"
+            placeholder={`auto: ${new Intl.NumberFormat('de-DE').format(detected.inputTokens)}`}
+            tooltip={HELP.aiTokens}
+            value={values.aiProfile.inputTokensPerTransaction}
+            onChange={(v) => setAi('inputTokensPerTransaction', v)}
+            onBlur={() => touch('aiProfile.inputTokensPerTransaction')}
+            error={errorFor('aiProfile.inputTokensPerTransaction')}
+          />
+          <NumberField
+            label="Output-Tokens je Vorgang"
+            unit="Tokens"
+            placeholder={`auto: ${new Intl.NumberFormat('de-DE').format(detected.outputTokens)}`}
+            tooltip={HELP.aiTokens}
+            value={values.aiProfile.outputTokensPerTransaction}
+            onChange={(v) => setAi('outputTokensPerTransaction', v)}
+            onBlur={() => touch('aiProfile.outputTokensPerTransaction')}
+            error={errorFor('aiProfile.outputTokensPerTransaction')}
+          />
+          <NumberField
+            label="Beteiligte Mitarbeitende"
+            unit="Personen"
+            placeholder={`auto: ${detected.usersInvolved}`}
+            tooltip={HELP.aiUsers}
+            value={values.aiProfile.usersInvolved}
+            onChange={(v) => setAi('usersInvolved', v)}
+            onBlur={() => touch('aiProfile.usersInvolved')}
+            error={errorFor('aiProfile.usersInvolved')}
+          />
+          <NumberField
+            label="davon mit Microsoft-365-Copilot-Lizenz"
+            unit="Personen"
+            placeholder={`auto: ${detected.usersWithCopilot}`}
+            tooltip={HELP.aiUsers}
+            value={values.aiProfile.usersWithCopilot}
+            onChange={(v) => setAi('usersWithCopilot', v)}
+            onBlur={() => touch('aiProfile.usersWithCopilot')}
+            error={errorFor('aiProfile.usersWithCopilot')}
           />
         </FormSection>
       </div>

@@ -97,7 +97,7 @@ function CompareLine({ label, value, total, negative }: { label: string; value: 
 }
 
 function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
-  const { updateProcess } = useProcessStore();
+  const { updateProcess, aiContext } = useProcessStore();
   const { notify } = useToast();
   const saved = useMemo(() => economicInputsOf(process), [process]);
   const [inputs, setInputs] = useState<EconomicInputs>(saved);
@@ -105,7 +105,7 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
   const dirty = METRIC_KEYS.some((k) => !Object.is(inputs[k], saved[k])) || SCENARIO_KEYS.some((k) => !Object.is(inputs[k], saved[k]));
 
   const merged = useMemo<BusinessProcess>(() => ({ ...process, ...splitInputs(inputs) }), [process, inputs]);
-  const evaluation = useMemo(() => evaluateProcess(merged), [merged]);
+  const evaluation = useMemo(() => evaluateProcess(merged, aiContext), [merged, aiContext]);
   const validation = useMemo(() => validateProcess(formValuesFromProcess(merged)), [merged]);
   const eco = evaluation.economics;
   const sensitivity = useMemo(
@@ -161,7 +161,7 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
               <SliderField label="Reduktion der Bearbeitungszeit" tooltip={HELP.timeReductionPct} value={inputs.timeReductionPct} onChange={set('timeReductionPct')} error={err('scenario.timeReductionPct')} warning={validation.warnings['scenario.timeReductionPct']} />
               <SliderField label="Reduktion der Fehler" tooltip={HELP.errorReductionPct} value={inputs.errorReductionPct} onChange={set('errorReductionPct')} error={err('scenario.errorReductionPct')} />
               <NumberField label="Einmalige Implementierungskosten" unit="€" tooltip={HELP.implementationCost} value={inputs.implementationCost} onChange={set('implementationCost')} error={err('scenario.implementationCost')} />
-              <NumberField label="Monatliche Betriebskosten" unit="€/Mon." tooltip={HELP.monthlyOperatingCost} value={inputs.monthlyOperatingCost} onChange={set('monthlyOperatingCost')} error={err('scenario.monthlyOperatingCost')} />
+              <NumberField label="Betriebskosten ohne KI-Nutzung" unit="€/Mon." tooltip={HELP.monthlyOperatingCost} value={inputs.monthlyOperatingCost} onChange={set('monthlyOperatingCost')} error={err('scenario.monthlyOperatingCost')} />
               <NumberField label="Harte Einsparungen p. a. (optional)" unit="€/Jahr" hint="Nur Cash-wirksame Einsparungen" tooltip={HELP.annualHardSavings} value={inputs.annualHardSavings} onChange={set('annualHardSavings')} error={err('scenario.annualHardSavings')} />
             </div>
             <a href={paths.processEdit(process.id)} className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900">
@@ -406,7 +406,7 @@ export function CalculatorPage({ id }: { id?: string }) {
 
   const header = (
     <PageHeader
-      title="Wertrechner"
+      title="Business Case"
       subtitle="Zeit, Kapazität und wirtschaftliches Potenzial für einen Prozess interaktiv berechnen. Alle Ergebnisse sind Schätzungen bis zur Validierung."
       actions={
         <>

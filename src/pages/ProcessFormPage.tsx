@@ -24,7 +24,7 @@ export function ProcessFormPage({ id }: { id?: string }) {
           icon={FileQuestion}
           title="Prozess nicht gefunden"
           text="Der Prozess existiert nicht (mehr). Möglicherweise wurde er gelöscht."
-          actions={<LinkButton href={paths.processes()}>Zur Prozessliste</LinkButton>}
+          actions={<LinkButton href={paths.processes()}>Zu den Use Cases</LinkButton>}
         />
       </Card>
     );
@@ -35,7 +35,7 @@ export function ProcessFormPage({ id }: { id?: string }) {
   return (
     <>
       <PageHeader
-        back={isEdit && existing ? { href: paths.processDetail(existing.id), label: 'Zurück zur Bewertung' } : { href: paths.processes(), label: 'Zur Prozessliste' }}
+        back={isEdit && existing ? { href: paths.processDetail(existing.id), label: 'Zurück zur Bewertung' } : { href: paths.processes(), label: 'Zu den Use Cases' }}
         title={isEdit ? 'Prozess bearbeiten' : 'Neuen Prozess erfassen'}
         subtitle={
           isEdit

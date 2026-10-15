@@ -199,14 +199,16 @@ interface NumberInputProps {
   id?: string;
   ariaLabel?: string;
   className?: string;
+  /** Maximum decimals shown when the value is formatted (default 2). */
+  decimals?: number;
 }
 
 /**
  * Text input with German number parsing ("1.250,5"). Keeps the raw text while typing,
  * reports null for empty and NaN for unparsable input (caught by validation).
  */
-export function NumberInput({ value, onChange, onBlur, unit, placeholder, error, id, ariaLabel, className = '' }: NumberInputProps) {
-  const [text, setText] = useState(() => formatInputNumber(value));
+export function NumberInput({ value, onChange, onBlur, unit, placeholder, error, id, ariaLabel, className = '', decimals = 2 }: NumberInputProps) {
+  const [text, setText] = useState(() => formatInputNumber(value, decimals));
   const [focused, setFocused] = useState(false);
 
   // Sync external changes (e.g. slider, reset) while the field is not being edited.
@@ -214,8 +216,8 @@ export function NumberInput({ value, onChange, onBlur, unit, placeholder, error,
     if (focused) return;
     // Keep unparsable text visible so the user can correct it.
     if (typeof value === 'number' && Number.isNaN(value)) return;
-    setText(formatInputNumber(value));
-  }, [value, focused]);
+    setText(formatInputNumber(value, decimals));
+  }, [value, focused, decimals]);
 
   return (
     <div className={`relative ${className}`}>

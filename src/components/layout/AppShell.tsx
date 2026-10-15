@@ -1,8 +1,10 @@
 import {
   BookOpenText,
   Calculator,
+  Gauge,
   LayoutDashboard,
   ListChecks,
+  Scale,
   Menu,
   RotateCcw,
   Trash2,
@@ -16,6 +18,7 @@ import { paths, type Route } from '../../state/router';
 import { useProcessStore } from '../../state/ProcessStore';
 import { useToast } from '../../state/Toast';
 import { ConfirmDialog } from '../ui/Modal';
+import { DEMO_PROCESSES } from '../../data/demoData';
 
 interface NavItem {
   label: string;
@@ -27,31 +30,43 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   {
-    label: 'Dashboard',
-    href: paths.dashboard(),
-    icon: LayoutDashboard,
-    match: (r) => r.name === 'dashboard',
-    description: 'Management-Überblick',
+    label: 'KI-Cockpit',
+    href: paths.cockpit(),
+    icon: Gauge,
+    match: (r) => r.name === 'cockpit',
+    description: 'Kosten & Entscheidungen',
   },
   {
-    label: 'Prozesse',
+    label: 'Use Cases',
     href: paths.processes(),
     icon: ListChecks,
     match: (r) => r.name.startsWith('process'),
     description: 'Erfassen & bewerten',
   },
   {
-    label: 'Wertrechner',
+    label: 'Business Case',
     href: paths.calculator(),
     icon: Calculator,
     match: (r) => r.name === 'calculator',
-    description: 'Szenarien berechnen',
+    description: 'Szenarien je Use Case',
   },
+  {
+    label: 'AI-CoE-Portfolio',
+    href: paths.dashboard(),
+    icon: LayoutDashboard,
+    match: (r) => r.name === 'dashboard',
+    description: 'Priorisierung & Pipeline',
+  },
+];
+
+const TRANSPARENCY: { label: string; href: string; icon: LucideIcon; route: Route['name'] }[] = [
+  { label: 'Preise & Annahmen', href: paths.pricing(), icon: Scale, route: 'pricing' },
+  { label: 'Bewertungsmethodik', href: paths.methodology(), icon: BookOpenText, route: 'methodology' },
 ];
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <a href={paths.dashboard()} className="block rounded focus-visible:outline-offset-4" aria-label="CWS Process Intelligence – zum Dashboard">
+    <a href={paths.cockpit()} className="block rounded focus-visible:outline-offset-4" aria-label="CWS Process Intelligence – zum KI-Cockpit">
       <img
         src={logoUrl}
         alt="CWS Workwear"
@@ -109,18 +124,27 @@ function SidebarContent({ route, onNavigate }: { route: Route; onNavigate: () =>
         </ul>
 
         <p className="mt-6 px-3 pb-2 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Transparenz</p>
-        <a
-          href={paths.methodology()}
-          onClick={onNavigate}
-          aria-current={route.name === 'methodology' ? 'page' : undefined}
-          className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-            route.name === 'methodology' ? 'bg-white/10 text-white' : 'text-slate-300 hover:bg-white/5 hover:text-white'
-          }`}
-        >
-          {route.name === 'methodology' && <span className="absolute inset-y-2 left-0 w-1 rounded-r bg-cws-red-500" aria-hidden />}
-          <BookOpenText className={`size-[18px] ${route.name === 'methodology' ? 'text-brand-400' : 'text-slate-400'}`} aria-hidden />
-          Bewertungsmethodik
-        </a>
+        <ul className="space-y-1">
+          {TRANSPARENCY.map((item) => {
+            const active = route.name === item.route;
+            return (
+              <li key={item.href}>
+                <a
+                  href={item.href}
+                  onClick={onNavigate}
+                  aria-current={active ? 'page' : undefined}
+                  className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    active ? 'bg-white/10 text-white' : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  {active && <span className="absolute inset-y-2 left-0 w-1 rounded-r bg-cws-red-500" aria-hidden />}
+                  <item.icon className={`size-[18px] ${active ? 'text-brand-400' : 'text-slate-400'}`} aria-hidden />
+                  {item.label}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
 
       <div className="mt-auto space-y-1 border-t border-white/10 px-3 py-4">
@@ -154,7 +178,7 @@ function SidebarContent({ route, onNavigate }: { route: Route; onNavigate: () =>
         confirmLabel="Zurücksetzen"
         message={
           <>
-            Die 8 Demo-Prozesse werden im Originalzustand wiederhergestellt; Änderungen an Demo-Prozessen gehen verloren.
+            Die {DEMO_PROCESSES.length} Demo-Use-Cases werden im Originalzustand wiederhergestellt; Änderungen an Demo-Prozessen gehen verloren.
             {userCount > 0 && <> Ihre {userCount} eigenen Prozesse bleiben erhalten.</>}
           </>
         }

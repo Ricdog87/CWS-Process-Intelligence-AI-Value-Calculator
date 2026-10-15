@@ -1,6 +1,7 @@
 import { Activity, Hourglass, Sparkles } from 'lucide-react';
 import type { ProcessEvaluation } from '../../lib/evaluation';
 import { formatCurrency, formatMonths, formatNumber, formatSignedCurrency } from '../../lib/format';
+import { CopilotVerdictBadge, TierBadge } from '../ai/AiBadges';
 import { CategoryBadge, SolutionBadge } from '../ui/DomainBadges';
 import { ScoreRing } from '../ui/ScoreRing';
 
@@ -54,6 +55,22 @@ export function LivePreview({ evaluation: e, hasName }: { evaluation: ProcessEva
             </>
           )}
         </div>
+
+        {e.ai.recommendation.llmNeeded && e.recommendation.decided && (
+          <div className="mt-5 rounded-lg border border-slate-200 p-3">
+            <p className="flex items-center justify-between gap-2 text-xs font-medium text-slate-500">
+              Copilot-Check <CopilotVerdictBadge verdict={e.ai.recommendation.copilot.verdict} />
+            </p>
+            <p className="mt-1 text-xs font-semibold text-slate-900">{e.ai.recommendation.copilot.title}</p>
+            {e.ai.recommendation.recommended && (
+              <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
+                Plattform: <span className="font-medium text-slate-900">{e.ai.recommendation.recommended.option.name}</span>
+                <TierBadge tier={e.ai.recommendation.recommended.option.tier} short /> · KI-Kosten{' '}
+                <span className="tabular font-medium text-slate-900">{formatCurrency(e.ai.recommendation.recommended.annualCostEur)} p.&nbsp;a.</span>
+              </p>
+            )}
+          </div>
+        )}
 
         <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-xs">
           <div>

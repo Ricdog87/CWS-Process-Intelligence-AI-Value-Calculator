@@ -4,6 +4,7 @@
  */
 import { DEPARTMENTS, STATUSES, SYSTEMS } from '../config/options';
 import { createDemoProcesses } from '../data/demoData';
+import { EMPTY_AI_PROFILE, type AiProfileInput } from '../types/ai';
 import type {
   AutomationScenario,
   BusinessProcess,
@@ -84,6 +85,19 @@ export function sanitizeProcess(raw: unknown): BusinessProcess | null {
     annualHardSavings: num(s.annualHardSavings),
   };
 
+  const ai = isObject(raw.aiProfile) ? raw.aiProfile : {};
+  const aiProfile: AiProfileInput = {
+    ...EMPTY_AI_PROFILE,
+    taskType: oneOf(ai.taskType, ['summarize', 'draft', 'classify', 'extract', 'knowledge', 'analyze', 'translate'] as const),
+    interactionMode: oneOf(ai.interactionMode, ['interactive', 'automated'] as const),
+    dataSensitivity: oneOf(ai.dataSensitivity, ['public', 'internal', 'confidential', 'personal'] as const),
+    complexity: oneOf(ai.complexity, ['simple', 'standard', 'complex'] as const),
+    inputTokensPerTransaction: num(ai.inputTokensPerTransaction),
+    outputTokensPerTransaction: num(ai.outputTokensPerTransaction),
+    usersInvolved: num(ai.usersInvolved),
+    usersWithCopilot: num(ai.usersWithCopilot),
+  };
+
   const now = new Date().toISOString();
   const systems = Array.isArray(raw.systems)
     ? Array.from(new Set(raw.systems.map((x) => oneOf(x, SYSTEM_KEYS)).filter((x) => x !== null)))
@@ -99,6 +113,7 @@ export function sanitizeProcess(raw: unknown): BusinessProcess | null {
     metrics,
     assessment,
     scenario,
+    aiProfile,
     status: oneOf(raw.status, STATUS_KEYS) ?? 'new',
     isDemo: raw.isDemo === true,
     createdAt: str(raw.createdAt, 40) || now,

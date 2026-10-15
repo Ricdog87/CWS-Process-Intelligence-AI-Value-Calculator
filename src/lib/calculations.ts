@@ -32,13 +32,15 @@ export interface EconomicResult {
   totalAnnualHoursSaved: number;
   annualHardSavings: number;
   implementationCost: number;
-  /** Monthly operating costs × 12 */
+  /** Monthly operating costs × 12 (maintenance, support, other licences – without AI usage) */
   annualOperatingCosts: number;
+  /** Annual AI usage cost of the recommended platform (tokens, credits, additional licences) */
+  annualAiRunCost: number;
   /** Capacity value + avoided rework value + hard savings */
   annualGrossBenefit: number;
-  /** Gross benefit − operating costs: the recurring value from year 2 onwards */
+  /** Gross benefit − operating costs − AI run cost: the recurring value from year 2 onwards */
   annualRecurringNetValue: number;
-  /** Implementation + annual operating costs */
+  /** Implementation + annual operating costs + AI run cost */
   firstYearCosts: number;
   /** Gross benefit − implementation − operating costs */
   firstYearNetBenefit: number;
@@ -113,7 +115,7 @@ export function paybackPeriodMonths(investment: number, annualRecurringNetValue:
   return investment / monthlyNet;
 }
 
-export function calculateEconomics(inputs: EconomicInputs): EconomicResult {
+export function calculateEconomics(inputs: EconomicInputs, annualAiRunCost = 0): EconomicResult {
   const transactions = safeAmount(inputs.transactionsPerMonth);
   const minutes = safeAmount(inputs.minutesPerTransaction);
   const hourlyCost = safeAmount(inputs.hourlyCost);
@@ -135,9 +137,10 @@ export function calculateEconomics(inputs: EconomicInputs): EconomicResult {
   const annualAvoidedReworkValue = annualAvoidedReworkHours * hourlyCost;
 
   const annualOperatingCosts = monthlyOperatingCost * 12;
+  const aiRunCost = safeAmount(annualAiRunCost);
   const annualGrossBenefit = annualCapacityValue + annualAvoidedReworkValue + annualHardSavings;
-  const annualRecurringNetValue = annualGrossBenefit - annualOperatingCosts;
-  const firstYearCosts = implementationCost + annualOperatingCosts;
+  const annualRecurringNetValue = annualGrossBenefit - annualOperatingCosts - aiRunCost;
+  const firstYearCosts = implementationCost + annualOperatingCosts + aiRunCost;
   const firstYearNetBenefit = annualGrossBenefit - firstYearCosts;
   const firstYearRoiPct = firstYearCosts > 0 ? (firstYearNetBenefit / firstYearCosts) * 100 : null;
 
@@ -155,6 +158,7 @@ export function calculateEconomics(inputs: EconomicInputs): EconomicResult {
     annualHardSavings,
     implementationCost,
     annualOperatingCosts,
+    annualAiRunCost: aiRunCost,
     annualGrossBenefit,
     annualRecurringNetValue,
     firstYearCosts,
@@ -162,7 +166,7 @@ export function calculateEconomics(inputs: EconomicInputs): EconomicResult {
     firstYearRoiPct,
     paybackMonths: paybackPeriodMonths(implementationCost, annualRecurringNetValue),
     cashFirstYearNet: annualHardSavings - firstYearCosts,
-    cashPaybackMonths: paybackPeriodMonths(implementationCost, annualHardSavings - annualOperatingCosts),
+    cashPaybackMonths: paybackPeriodMonths(implementationCost, annualHardSavings - annualOperatingCosts - aiRunCost),
     missingInputs,
     isComplete: missingInputs.length === 0,
   };

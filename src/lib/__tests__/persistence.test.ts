@@ -92,6 +92,7 @@ describe('CSV export', () => {
     expect(lines).toHaveLength(rows.length + 1);
     expect(lines[0].split(';')).toHaveLength(lines[1].split(';').length);
     expect(csv).toContain('DEMO-DATEN');
+    expect(lines[0]).toContain('KI-Nutzungskosten p. a. (EUR)');
   });
 });
 

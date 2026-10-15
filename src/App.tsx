@@ -4,8 +4,10 @@ import { LinkButton } from './components/ui/Button';
 import { Card } from './components/ui/Card';
 import { EmptyState } from './components/ui/EmptyState';
 import { CalculatorPage } from './pages/CalculatorPage';
+import { CockpitPage } from './pages/CockpitPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { MethodologyPage } from './pages/MethodologyPage';
+import { PricingPage } from './pages/PricingPage';
 import { ProcessDetailPage } from './pages/ProcessDetailPage';
 import { ProcessesPage } from './pages/ProcessesPage';
 import { ProcessFormPage } from './pages/ProcessFormPage';
@@ -15,6 +17,8 @@ import { ToastProvider } from './state/Toast';
 
 function Page({ route }: { route: Route }) {
   switch (route.name) {
+    case 'cockpit':
+      return <CockpitPage />;
     case 'dashboard':
       return <DashboardPage />;
     case 'processes':
@@ -29,6 +33,8 @@ function Page({ route }: { route: Route }) {
       return <CalculatorPage id={route.id} />;
     case 'methodology':
       return <MethodologyPage />;
+    case 'pricing':
+      return <PricingPage />;
     case 'not-found':
       return (
         <Card>
@@ -36,7 +42,7 @@ function Page({ route }: { route: Route }) {
             icon={Compass}
             title="Seite nicht gefunden"
             text="Die aufgerufene Adresse existiert nicht."
-            actions={<LinkButton href={paths.dashboard()}>Zum Dashboard</LinkButton>}
+            actions={<LinkButton href={paths.cockpit()}>Zum KI-Cockpit</LinkButton>}
           />
         </Card>
       );

@@ -35,6 +35,8 @@ describe('parseNumberInput', () => {
     ['45.000 €', 45000],
     ['70 %', 70],
     ['0', 0],
+    ['0.055', 0.055],
+    ['0,006932', 0.006932],
   ])('%s → %f', (input, expected) => {
     expect(parseNumberInput(input)).toBe(expected);
   });
@@ -70,5 +72,15 @@ describe('signs and exact hours', () => {
     expect(formatHoursExact(67.5)).toBe('67,5 h');
     expect(formatHoursExact(53.3333)).toBe('53,33 h');
     expect(formatHoursExact(810)).toBe('810 h');
+  });
+});
+
+describe('formatUnitCost', () => {
+  it('shows fractions of a cent readably', async () => {
+    const { formatUnitCost } = await import('../format');
+    expect(formatUnitCost(0.00045)).toBe('0,045 ct');
+    expect(formatUnitCost(0.12)).toBe('0,12 €');
+    expect(formatUnitCost(28.1)).toBe('28,1 €');
+    expect(formatUnitCost(0)).toBe('0 €');
   });
 });

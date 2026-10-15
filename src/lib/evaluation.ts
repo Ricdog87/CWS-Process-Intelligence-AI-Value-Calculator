@@ -1,7 +1,12 @@
 /**
  * Combines score, recommendation, economics and priority into one evaluation per process.
  */
+import { AI_CATALOG, DEFAULT_EUR_PER_USD } from '../config/aiPlatforms';
+import type { AiOption } from '../types/ai';
 import type { BusinessProcess, ProcessStatus } from '../types/process';
+import { recommendAiPlatform, type AiRecommendation } from './aiCost';
+import { resolveAiProfile, type ResolvedAiProfile } from './aiProfile';
+import { defaultAiSettings, type AiSettings } from './aiSettings';
 import { calculateEconomics, economicInputsOf, ECONOMIC_INPUT_LABELS, type EconomicResult } from './calculations';
 import { calculatePriority, type PriorityResult } from './priority';
 import { recommendSolution, type RecommendationResult } from './recommendation';
@@ -12,12 +17,36 @@ export interface NextStep {
   details: string[];
 }
 
+export interface AiContext {
+  settings: AiSettings;
+  catalog: AiOption[];
+}
+
+export const DEFAULT_AI_CONTEXT: AiContext = { settings: defaultAiSettings(DEFAULT_EUR_PER_USD), catalog: AI_CATALOG };
+
+export type AiDecisionKey = 'go' | 'check' | 'no_go' | 'no_ai';
+
+export interface AiDecision {
+  key: AiDecisionKey;
+  label: string;
+  reason: string;
+}
+
+export interface AiEvaluation {
+  profile: ResolvedAiProfile;
+  recommendation: AiRecommendation;
+  /** Annual AI usage cost included in the economics (0 when no LLM is needed or the process must be optimised first). */
+  annualRunCost: number;
+  decision: AiDecision;
+}
+
 export interface ProcessEvaluation {
   score: AutomationScoreResult;
   recommendation: RecommendationResult;
   economics: EconomicResult;
   priority: PriorityResult;
   nextStep: NextStep;
+  ai: AiEvaluation;
   /** True when any part of the assessment relies on missing or uncertain information. */
   isPreliminary: boolean;
   /** Human-readable list of everything that is missing or uncertain. */
@@ -81,10 +110,46 @@ export function recommendNextStep(
   return { title, details };
 }
 
-export function evaluateProcess(process: BusinessProcess): ProcessEvaluation {
+/** C-level traffic light: is AI worth doing here, safely and economically? */
+export function aiDecision(
+  score: AutomationScoreResult,
+  recommendation: RecommendationResult,
+  ai: AiRecommendation,
+  economics: EconomicResult,
+): AiDecision {
+  if (!ai.llmNeeded) {
+    return { key: 'no_ai', label: 'Ohne KI automatisieren', reason: 'Strukturierte, regelbasierte Abläufe – klassische Automatisierung genügt, keine KI-Kosten.' };
+  }
+  if (recommendation.approach === 'optimization_first') {
+    return { key: 'no_go', label: 'Nicht jetzt', reason: 'Prozess zuerst standardisieren – KI würde die heutige Ineffizienz automatisieren.' };
+  }
+  if (!ai.recommended) {
+    return { key: 'no_go', label: 'Nicht jetzt', reason: 'Keine freigegebene Plattform für Datenklasse und Anforderungen.' };
+  }
+  if (economics.annualRecurringNetValue <= 0) {
+    return { key: 'no_go', label: 'Nicht wirtschaftlich', reason: 'Laufende Kosten (inkl. KI-Nutzung) übersteigen den jährlichen Nutzen.' };
+  }
+  const payback = economics.paybackMonths;
+  if (!recommendation.decided || score.isPreliminary || score.score < 60 || payback === null || payback > 24) {
+    const why = !recommendation.decided || score.isPreliminary
+      ? 'Angaben unvollständig – Bewertung vorläufig.'
+      : score.score < 60
+        ? `Automation Score ${score.score} – Umsetzungsreife noch begrenzt.`
+        : `Amortisation erst nach ${Math.round(payback ?? 0)} Monaten.`;
+    return { key: 'check', label: 'Prüfen', reason: why };
+  }
+  return { key: 'go', label: 'Umsetzen', reason: `Wirtschaftlich (Amortisation ${payback < 1 ? 'unter 1 Monat' : `in ${Math.round(payback)} Monaten`}) und in freigegebener Umgebung umsetzbar.` };
+}
+
+export function evaluateProcess(process: BusinessProcess, context: AiContext = DEFAULT_AI_CONTEXT): ProcessEvaluation {
   const score = calculateAutomationScore(process);
   const recommendation = recommendSolution(process.assessment, score.score, score.range.max);
-  const economics = calculateEconomics(economicInputsOf(process));
+  const profile = resolveAiProfile(process, context.settings);
+  const llmNeeded = recommendation.approach !== 'classical';
+  const aiRec = recommendAiPlatform(profile, context.catalog, context.settings, llmNeeded);
+  const annualRunCost =
+    llmNeeded && recommendation.approach !== 'optimization_first' && aiRec.recommended ? aiRec.recommended.annualCostEur : 0;
+  const economics = calculateEconomics(economicInputsOf(process), annualRunCost);
   const priority = calculatePriority({
     automationScore: score.score,
     annualRecurringValue: economics.annualRecurringNetValue,
@@ -102,6 +167,7 @@ export function evaluateProcess(process: BusinessProcess): ProcessEvaluation {
     economics,
     priority,
     nextStep: recommendNextStep(score, recommendation, economics, process.status),
+    ai: { profile, recommendation: aiRec, annualRunCost, decision: aiDecision(score, recommendation, aiRec, economics) },
     isPreliminary: score.isPreliminary || recommendation.isPreliminary || !economics.isComplete || priority.isPreliminary,
     openPoints,
   };

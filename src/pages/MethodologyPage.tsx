@@ -1,4 +1,5 @@
 import { PageHeader } from '../components/layout/PageHeader';
+import { paths } from '../state/router';
 import { Card } from '../components/ui/Card';
 import { SolutionBadge } from '../components/ui/DomainBadges';
 import {
@@ -51,10 +52,34 @@ const FORMULAS: [string, string][] = [
   ['Kapazitätswert p. a.', 'Freigesetzte Kapazität × interner Stundensatz'],
   ['Nacharbeit / Monat', 'Vorgänge × Fehlerquote × Nacharbeitsminuten ÷ 60'],
   ['Qualitätsnutzen p. a.', 'Nacharbeit / Monat × erwartete Fehlerreduktion × 12 × Stundensatz'],
-  ['Betriebskosten p. a.', 'Monatliche Betriebskosten × 12'],
-  ['Netto-Nutzen Jahr 1', 'Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Implementierung − Betriebskosten p. a.'],
-  ['ROI Jahr 1', 'Netto-Nutzen Jahr 1 ÷ (Implementierung + Betriebskosten p. a.)'],
-  ['Amortisation (Monate)', 'Implementierung ÷ ((Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Betriebskosten p. a.) ÷ 12)'],
+  ['Betriebskosten p. a.', 'Monatliche Betriebskosten ohne KI-Nutzung × 12'],
+  ['KI-Nutzungskosten p. a.', 'Laufende Kosten der empfohlenen KI-Plattform (Tokens, Copilot Credits oder zusätzliche Lizenzen) – siehe 6'],
+  ['Netto-Nutzen laufend p. a.', 'Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Betriebskosten p. a. − KI-Nutzungskosten p. a.'],
+  ['Netto-Nutzen Jahr 1', 'Netto-Nutzen laufend p. a. − Implementierung'],
+  ['ROI Jahr 1', 'Netto-Nutzen Jahr 1 ÷ (Implementierung + Betriebskosten p. a. + KI-Nutzungskosten p. a.)'],
+  ['Amortisation (Monate)', 'Implementierung ÷ (Netto-Nutzen laufend p. a. ÷ 12)'],
+];
+
+const AI_STEPS: [string, string][] = [
+  [
+    'Profil erkennen',
+    'Aus Name und Beschreibung werden Aufgabentyp, Betriebsart (interaktiv/automatisiert), Datenklasse und Komplexität per Schlüsselwörtern erkannt. Jede Erkennung ist begründet und im Use Case überschreibbar. Personaldaten oder Compliance-Bedenken führen nie zur Einstufung „öffentlich“.',
+  ],
+  [
+    'Kosten je Plattform',
+    'Tokens: Vorgänge × 12 × (Input-Tokens × (1 + Aufschlag) × Input-Preis + Output-Tokens × Output-Preis) × Tokenizer-Faktor × Wechselkurs. Lizenzen: fehlende Lizenzen × Monatspreis × 12 – vorhandene Copilot-Lizenzen kosten nichts zusätzlich. Credits: Vorgänge × 12 × Credits je Vorgang × Credit-Preis (interaktiv nur für Nutzer ohne Copilot-Lizenz).',
+  ],
+  ['Sicherheitsfilter', 'Nur Plattformen der für die Datenklasse freigegebenen Sicherheitsstufen kommen in Frage (Standard: vertrauliche und personenbezogene Daten nur im Microsoft-365- oder Azure-Tenant).'],
+  ['Eignungsfilter', 'Die Plattform muss die Betriebsart unterstützen und für Aufgabentyp und Komplexität die nötige Modellqualität erreichen.'],
+  [
+    'Auswahl',
+    'Günstigste freigegebene Plattform – aber geschlossene Umgebung zuerst: Microsoft 365 wird empfohlen, solange es höchstens um die Toleranz teurer ist; sonst der Azure-Tenant nach derselben Regel; erst danach Anbieter mit Enterprise-Vertrag.',
+  ],
+  ['Benchmark', 'Die günstigste technisch geeignete Option ohne Sicherheitsfilter (meist OpenRouter) zeigt, was Sicherheit kostet. OpenRouter wird nur für öffentliche Daten empfohlen.'],
+  [
+    'Entscheidung',
+    'Ohne KI automatisieren (kein Sprachmodell nötig) · Nicht jetzt (Prozess erst optimieren oder keine freigegebene Plattform) · Nicht wirtschaftlich (Netto-Nutzen laufend ≤ 0) · Prüfen (offene Annahmen, Score < 60 oder Amortisation > 24 Monate) · Umsetzen (alle anderen).',
+  ],
 ];
 
 export function MethodologyPage() {
@@ -140,7 +165,7 @@ export function MethodologyPage() {
           </Card>
         </div>
 
-        <Card title="4 · Wirtschaftlichkeitsrechnung" subtitle="Formeln des Wertrechners" bodyClassName="">
+        <Card title="4 · Wirtschaftlichkeitsrechnung" subtitle="Formeln des Business Case" bodyClassName="">
           <table className="w-full text-sm">
             <tbody className="divide-y divide-slate-100">
               {FORMULAS.map(([label, formula]) => (
@@ -208,6 +233,31 @@ export function MethodologyPage() {
           </div>
           <p className="mt-4 text-sm text-slate-600">
             Einstufung: {PRIORITY_LEVELS.map((l) => `${l.label} ab ${l.min}`).join(' · ')}
+          </p>
+        </Card>
+
+        <Card
+          className="xl:col-span-2"
+          title="6 · KI-Kostenmodell & Plattformwahl"
+          subtitle="Microsoft 365 first, immer in sicherer Umgebung – in sieben nachvollziehbaren Schritten"
+          bodyClassName=""
+        >
+          <ol className="divide-y divide-slate-100 text-sm">
+            {AI_STEPS.map(([label, text], i) => (
+              <li key={label} className="flex gap-3 px-5 py-3">
+                <span className="tabular flex size-6 shrink-0 items-center justify-center rounded-full bg-ink-900 text-xs font-semibold text-white">{i + 1}</span>
+                <span>
+                  <span className="block font-medium text-slate-900">{label}</span>
+                  <span className="text-slate-600">{text}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p className="border-t border-slate-100 px-5 py-3 text-sm text-slate-600">
+            Preise, Wechselkurs, Toleranz und Sicherheitsrichtlinie mit Quellen:{' '}
+            <a href={paths.pricing()} className="font-medium text-slate-900 underline">
+              Preise &amp; Annahmen
+            </a>
           </p>
         </Card>
       </div>
