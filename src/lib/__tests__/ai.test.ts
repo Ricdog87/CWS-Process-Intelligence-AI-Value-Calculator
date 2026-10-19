@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { AI_CATALOG } from '../../config/aiPlatforms';
 import { createDemoProcesses } from '../../data/demoData';
 import type { AiOption, TaskType } from '../../types/ai';
 import { EMPTY_AI_PROFILE } from '../../types/ai';
@@ -96,6 +97,18 @@ describe('resolveAiProfile', () => {
   it('keeps classification simple even when the text mentions contracts', () => {
     const p = { ...base(), name: 'Klassifizierung Anfragen', description: 'Vertragsänderung, Reklamation – kategorisiert' };
     expect(resolveAiProfile(p, settings).complexity).toBe('simple');
+  });
+});
+
+describe('price catalog', () => {
+  it('uses the regular Mistral Large 4 list price, not the limited promo', () => {
+    const large = AI_CATALOG.find((o) => o.id === 'openrouter-large');
+    expect(large?.pricing.model).toBe('per_token');
+    if (large?.pricing.model !== 'per_token') return;
+    expect(large.pricing.inputUsdPer1M).toBeCloseTo(1.36 * 1.055, 4);
+    expect(large.pricing.outputUsdPer1M).toBeCloseTo(4.18 * 1.055, 4);
+    expect(large.notes).toContain('1,36');
+    expect(large.notes).toContain('nicht angesetzt');
   });
 });
 

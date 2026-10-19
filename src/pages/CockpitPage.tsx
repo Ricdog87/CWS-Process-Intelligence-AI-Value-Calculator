@@ -51,7 +51,7 @@ export function CockpitPage() {
 
   const exportCsv = () => {
     downloadTextFile(`cws-ki-cockpit-${new Date().toISOString().slice(0, 10)}.csv`, buildPortfolioCsv(sorted));
-    notify(`${sorted.length} Use Cases als CSV exportiert.`);
+    notify(`${sorted.length} ${sorted.length === 1 ? 'Use Case' : 'Use Cases'} als CSV exportiert.`);
   };
 
   const header = (
@@ -165,7 +165,7 @@ export function CockpitPage() {
               <div className="min-w-0">
                 <p className="text-xs text-slate-500">{t.label}</p>
                 <p className="text-lg font-semibold text-slate-900">
-                  {d.count} <span className="text-xs font-normal text-slate-500">Use Cases</span>
+                  {d.count} <span className="text-xs font-normal text-slate-500">{d.count === 1 ? 'Use Case' : 'Use Cases'}</span>
                 </p>
                 {t.key !== 'no_ai' && d.count > 0 && <p className="tabular text-xs text-slate-500">Netto {formatSignedCurrency(d.netRecurring)} p.&nbsp;a.</p>}
               </div>

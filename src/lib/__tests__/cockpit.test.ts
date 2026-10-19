@@ -29,6 +29,7 @@ describe('cockpit summary', () => {
   it('produces key statements for management', () => {
     expect(s.insights.length).toBeGreaterThanOrEqual(3);
     expect(s.insights.join(' ')).toContain('Microsoft-365-Tenant');
+    expect(s.insights.join(' ')).toContain('praktisch null');
   });
 
   it('sorts go before check before no-go before no-AI', () => {

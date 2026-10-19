@@ -145,10 +145,13 @@ export function summarizeCockpit(rows: PortfolioRow[]): CockpitSummary {
         `Für ${agentVsLicenceCount} Use Case(s) ist ein Agent über Copilot Chat günstiger als zusätzliche Copilot-Lizenzen: ${formatCurrency(agentVsLicenceSaving)} p. a. weniger.`,
       );
     }
+    const securityShare = pct(securityPremium, grossBenefit);
     insights.push(
-      securityPremium >= 1
-        ? `Preis der Sicherheit: Die geschlossene Umgebung kostet ${formatCurrency(securityPremium)} p. a. mehr als der günstigste offene Anbieter (z. B. OpenRouter) – ${formatNumber(pct(securityPremium, grossBenefit), 2)} % des Nutzens.`
-        : 'Preis der Sicherheit: praktisch null – die freigegebenen Plattformen im CWS-Tenant liegen auf dem Preisniveau des günstigsten offenen Anbieters (z. B. OpenRouter).',
+      securityPremium < 1
+        ? 'Preis der Sicherheit: praktisch null – die freigegebenen Plattformen im CWS-Tenant liegen auf dem Preisniveau des günstigsten offenen Anbieters (z. B. OpenRouter).'
+        : securityShare < 0.05
+          ? `Preis der Sicherheit: praktisch null – ${formatCurrency(securityPremium)} p. a. mehr als der günstigste offene Anbieter (z. B. OpenRouter), unter 0,05 % des Nutzens.`
+          : `Preis der Sicherheit: Die geschlossene Umgebung kostet ${formatCurrency(securityPremium)} p. a. mehr als der günstigste offene Anbieter (z. B. OpenRouter) – ${formatNumber(securityShare, 2)} % des Nutzens.`,
     );
   }
   insights.push(
