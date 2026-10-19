@@ -42,13 +42,13 @@ export interface EconomicResult {
   annualRecurringNetValue: number;
   /** Implementation + annual operating costs + AI run cost */
   firstYearCosts: number;
-  /** Gross benefit − implementation − operating costs */
+  /** Gross benefit − implementation − operating costs − AI run cost */
   firstYearNetBenefit: number;
   /** First-year net benefit / first-year costs × 100; null if there are no costs */
   firstYearRoiPct: number | null;
   /** Months until the implementation cost is recovered; null if never (recurring value ≤ 0) */
   paybackMonths: number | null;
-  /** Cash-only view: hard savings − implementation − operating costs */
+  /** Cash-only view: hard savings − implementation − operating costs − AI run cost */
   cashFirstYearNet: number;
   /** Payback based on hard savings only; null if never */
   cashPaybackMonths: number | null;
@@ -188,6 +188,24 @@ export function scaleEffects(inputs: EconomicInputs, effectFactor: number): Econ
     errorReductionPct: scale(inputs.errorReductionPct),
     annualHardSavings: scale(inputs.annualHardSavings),
   };
+}
+
+export interface SensitivityScenario {
+  /** Share of the expected effects that materialises (0.5 = 50 %). */
+  factor: number;
+  result: EconomicResult;
+}
+
+/**
+ * Sensitivity view: the same case with only part of the effects. Costs – including AI usage, which depends
+ * on volume, not on the effect – stay unchanged, so the 100 % row matches the main result.
+ */
+export function sensitivityScenarios(
+  inputs: EconomicInputs,
+  annualAiRunCost = 0,
+  factors: readonly number[] = [0.5, 0.75, 1],
+): SensitivityScenario[] {
+  return factors.map((factor) => ({ factor, result: calculateEconomics(scaleEffects(inputs, factor), annualAiRunCost) }));
 }
 
 export interface CumulativePoint {

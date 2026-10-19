@@ -77,6 +77,7 @@ export function buildWaterfall(eco: EconomicResult): Step[] {
   add('Harte Einsparungen', eco.annualHardSavings, 'cash');
   add('Implementierung', -eco.implementationCost, 'cost');
   add('Betrieb Jahr 1', -eco.annualOperatingCosts, 'cost');
+  if (eco.annualAiRunCost > 0) add('KI-Nutzung Jahr 1', -eco.annualAiRunCost, 'cost');
   steps.push({ name: 'Netto Jahr 1', range: [0, running], amount: running, kind: 'total' });
   return steps;
 }
@@ -125,8 +126,8 @@ interface LabelBox {
   value: number;
 }
 
-/** Below this chart width the six columns' category labels would collide – switch to horizontal bars. */
-const COLUMN_LAYOUT_MIN_WIDTH = 560;
+/** Below this chart width per column the category labels would collide – switch to horizontal bars. */
+const COLUMN_MIN_WIDTH = 94;
 
 function HorizontalWaterfall({ data, min, max }: { data: Step[]; min: number; max: number }) {
   const span = max - min || 1000;
@@ -226,7 +227,7 @@ export function WaterfallChart({ economics }: { economics: EconomicResult }) {
   const min = Math.min(0, ...allValues);
   const max = Math.max(0, ...allValues);
   // Decide by the chart's own width (two-column layouts on wide screens make it narrow too).
-  const horizontal = width > 0 ? width < COLUMN_LAYOUT_MIN_WIDTH : narrowViewport;
+  const horizontal = width > 0 ? width < data.length * COLUMN_MIN_WIDTH : narrowViewport;
 
   return (
     <div ref={ref}>
@@ -313,7 +314,7 @@ export function CumulativeChart({ economics, months = 36 }: { economics: Economi
       {!showPayback && (
         <p className="mt-2 text-xs text-slate-500">
           {payback === null
-            ? 'Keine Amortisation: Der laufende Nutzen deckt die Betriebskosten nicht.'
+            ? 'Keine Amortisation: Der laufende Nutzen deckt die laufenden Kosten (Betrieb und KI-Nutzung) nicht.'
             : payback === 0
               ? 'Keine Investition erfasst – der Nutzen wirkt ab Monat 1.'
               : `Amortisation erst nach ${formatMonths(payback)} – außerhalb des dargestellten Zeitraums von ${months} Monaten.`}

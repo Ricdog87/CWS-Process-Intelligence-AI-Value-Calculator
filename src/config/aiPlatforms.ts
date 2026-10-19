@@ -218,9 +218,10 @@ export const AI_CATALOG: AiOption[] = [
     tier: 'D',
     modes: ['automated'],
     quality: FRONTIER,
-    pricing: { model: 'per_token', inputUsdPer1M: or(0.68), outputUsdPer1M: or(2.09) },
+    pricing: { model: 'per_token', inputUsdPer1M: or(1.36), outputUsdPer1M: or(4.18) },
     euDataResidency: false,
-    notes: 'Günstigstes Spitzenmodell für komplexe Aufgaben inkl. 5,5 % Plattformgebühr. Keine geschlossene Umgebung.',
+    notes:
+      'Regulärer Listenpreis 1,36 $/4,18 $ je Mio. Tokens (der befristete Aktionspreis 0,68 $/2,09 $ ist nicht angesetzt), inkl. 5,5 % Plattformgebühr. Keine geschlossene Umgebung – nur Benchmark.',
     sourceUrl: OPENROUTER_MODELS,
   },
 ];
