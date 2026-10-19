@@ -5,9 +5,11 @@ import {
   paybackPeriodMonths,
   safeAmount,
   scaleEffects,
+  sensitivityScenarios,
   shareFromPct,
   type EconomicInputs,
 } from '../calculations';
+import { buildWaterfall } from '../../components/calculator/ValueCharts';
 
 const base: EconomicInputs = {
   transactionsPerMonth: 2400,
@@ -164,5 +166,34 @@ describe('scenario helpers', () => {
     expect(series[0].value).toBe(-45000);
     const firstPositive = series.find((p) => p.value >= 0);
     expect(firstPositive?.month).toBe(Math.ceil(r.paybackMonths!));
+  });
+
+  it('sensitivity keeps AI usage cost, so the 100 % row matches the main result', () => {
+    const main = calculateEconomics(base, 1_200);
+    const rows = sensitivityScenarios(base, 1_200);
+    expect(rows.map((r) => r.factor)).toEqual([0.5, 0.75, 1]);
+    expect(rows[2].result.firstYearNetBenefit).toBeCloseTo(main.firstYearNetBenefit);
+    expect(rows[2].result.paybackMonths).toBeCloseTo(main.paybackMonths!);
+    expect(rows[0].result.annualAiRunCost).toBe(1_200);
+  });
+});
+
+describe('AI usage cost in both views', () => {
+  const r = calculateEconomics(base, 1_200);
+
+  it('is deducted in the economic and the cash view', () => {
+    expect(r.firstYearNetBenefit).toBeCloseTo(calculateEconomics(base).firstYearNetBenefit - 1_200);
+    expect(r.cashFirstYearNet).toBe(12000 - 45000 - 14400 - 1_200);
+  });
+
+  it('waterfall steps add up to the first-year net benefit', () => {
+    const steps = buildWaterfall(r);
+    const total = steps[steps.length - 1];
+    expect(steps.some((s) => s.name.startsWith('KI-Nutzung'))).toBe(true);
+    expect(total.amount).toBeCloseTo(r.firstYearNetBenefit);
+  });
+
+  it('waterfall has no AI step when there is no AI cost', () => {
+    expect(buildWaterfall(calculateEconomics(base)).some((s) => s.name.startsWith('KI-Nutzung'))).toBe(false);
   });
 });

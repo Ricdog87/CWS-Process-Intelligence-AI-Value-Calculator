@@ -163,7 +163,7 @@ export function PriorityMatrix({ rows }: { rows: PortfolioRow[] }) {
         </ResponsiveContainer>
       </div>
       <p className="mt-1 text-xs text-slate-500">
-        Y-Achse: jährlicher Netto-Wert (Kapazitäts- und Qualitätswert + harte Einsparungen − Betriebskosten). Schwellen: Score {tx}, {formatCurrency(ty)} p. a.
+        Y-Achse: jährlicher Netto-Wert (Kapazitäts- und Qualitätswert + harte Einsparungen − Betriebskosten − KI-Nutzung). Schwellen: Score {tx}, {formatCurrency(ty)} p. a.
       </p>
     </div>
   );

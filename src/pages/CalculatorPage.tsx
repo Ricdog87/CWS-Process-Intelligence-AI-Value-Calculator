@@ -29,10 +29,9 @@ import { HELP } from '../config/helpTexts';
 import { FTE_HOURS_PER_YEAR } from '../config/scoringConfig';
 import { usePortfolioRows } from '../hooks';
 import {
-  calculateEconomics,
   ECONOMIC_INPUT_LABELS,
   economicInputsOf,
-  scaleEffects,
+  sensitivityScenarios,
   type EconomicInputs,
 } from '../lib/calculations';
 import { evaluateProcess } from '../lib/evaluation';
@@ -108,10 +107,9 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
   const evaluation = useMemo(() => evaluateProcess(merged, aiContext), [merged, aiContext]);
   const validation = useMemo(() => validateProcess(formValuesFromProcess(merged)), [merged]);
   const eco = evaluation.economics;
-  const sensitivity = useMemo(
-    () => [0.5, 0.75, 1].map((factor) => ({ factor, result: calculateEconomics(scaleEffects(inputs, factor)) })),
-    [inputs],
-  );
+  const sensitivity = useMemo(() => sensitivityScenarios(inputs, eco.annualAiRunCost), [inputs, eco.annualAiRunCost]);
+  const hasAiCost = eco.annualAiRunCost > 0;
+  const aiPlatformName = evaluation.ai.recommendation.recommended?.option.name;
 
   const set = (key: keyof EconomicInputs) => (value: number | null) => setInputs((prev) => ({ ...prev, [key]: value }));
   const err = (key: FieldKey) => validation.errors[key];
@@ -225,14 +223,19 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
               value={formatSignedCurrency(eco.firstYearNetBenefit)}
               sub={`${eco.firstYearRoiPct === null ? 'ROI nicht sinnvoll berechenbar (keine Kosten)' : `ROI Jahr 1: ${formatPercent(eco.firstYearRoiPct)}`} · inkl. Kapazitätswert`}
               footnote={`Cash-Effekt Jahr 1 (nur harte Einsparungen): ${formatSignedCurrency(eco.cashFirstYearNet)}`}
-              hint="Wirtschaftliche Sicht: Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Implementierung − Betriebskosten Jahr 1. Enthält freigesetzte Kapazität, die nicht automatisch Cash ist."
+              hint="Wirtschaftliche Sicht: Kapazitätswert + Qualitätsnutzen + harte Einsparungen − Implementierung − Betriebskosten Jahr 1 − KI-Nutzung Jahr 1. Enthält freigesetzte Kapazität, die nicht automatisch Cash ist."
             />
             <KpiCard
-              label="Amortisation (geschätzt)"
+              label="Amortisation (wirtschaftlich)"
               icon={Timer}
               value={formatMonths(eco.paybackMonths)}
-              sub={`Nur Cash-Sicht: ${formatMonths(eco.cashPaybackMonths)}`}
-              hint="Implementierungskosten ÷ monatlicher laufender Netto-Nutzen. „Nicht erreichbar“, wenn der laufende Nutzen die Betriebskosten nicht übersteigt."
+              sub={`Inkl. Kapazitätswert · Cash-Sicht: ${formatMonths(eco.cashPaybackMonths)}`}
+              footnote={
+                eco.paybackMonths !== null && eco.cashPaybackMonths === null
+                  ? 'Nur über freigesetzte Kapazität – zahlt sich in Cash erst aus, wenn die Zeit nachweislich anders genutzt wird.'
+                  : undefined
+              }
+              hint="Implementierungskosten ÷ monatlicher laufender Netto-Nutzen (inkl. Kapazitätswert). Die Cash-Sicht rechnet nur mit harten Einsparungen. „Nicht erreichbar“, wenn der laufende Nutzen die laufenden Kosten nicht übersteigt."
             />
           </div>
 
@@ -248,6 +251,7 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
                 <CompareLine label="Harte Einsparungen" value={formatCurrency(eco.annualHardSavings)} />
                 <CompareLine label="Implementierung" value={formatSignedCurrency(-eco.implementationCost)} />
                 <CompareLine label="Betriebskosten Jahr 1" value={formatSignedCurrency(-eco.annualOperatingCosts)} />
+                {hasAiCost && <CompareLine label="KI-Nutzung Jahr 1" value={formatSignedCurrency(-eco.annualAiRunCost)} />}
                 <CompareLine label="Netto-Nutzen Jahr 1" value={formatSignedCurrency(eco.firstYearNetBenefit)} total negative={eco.firstYearNetBenefit < 0} />
                 <p className="mt-2 text-xs text-slate-500">Laufender Netto-Wert ab Jahr 2: {formatSignedCurrency(eco.annualRecurringNetValue)} p. a.</p>
               </div>
@@ -259,6 +263,7 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
                 <CompareLine label="Harte Einsparungen" value={formatCurrency(eco.annualHardSavings)} />
                 <CompareLine label="Implementierung" value={formatSignedCurrency(-eco.implementationCost)} />
                 <CompareLine label="Betriebskosten Jahr 1" value={formatSignedCurrency(-eco.annualOperatingCosts)} />
+                {hasAiCost && <CompareLine label="KI-Nutzung Jahr 1" value={formatSignedCurrency(-eco.annualAiRunCost)} />}
                 <CompareLine label="Cash-Effekt Jahr 1" value={formatSignedCurrency(eco.cashFirstYearNet)} total negative={eco.cashFirstYearNet < 0} />
                 <p className="mt-2 text-xs text-slate-500">
                   Ein Cash-Effekt aus freigesetzter Kapazität entsteht erst, wenn die Zeit nachweislich anders genutzt wird – z. B. Wachstum ohne
@@ -339,10 +344,17 @@ function CalculatorWorkspace({ process }: { process: BusinessProcess }) {
                     result={formatCurrency(eco.annualAvoidedReworkValue)}
                   />
                   <FormulaRow label="Betriebskosten p. a." formula={`${formatCurrency(inputs.monthlyOperatingCost ?? 0)} × 12`} result={formatCurrency(eco.annualOperatingCosts)} />
+                  {hasAiCost && (
+                    <FormulaRow
+                      label={'KI-Nutzung p. a.'}
+                      formula={aiPlatformName ? `Empfohlene Plattform: ${aiPlatformName} – Herleitung unter „Zur Bewertung“` : 'Empfohlene KI-Plattform'}
+                      result={formatCurrency(eco.annualAiRunCost)}
+                    />
+                  )}
                   <FormulaRow
                     strong
                     label="Netto-Nutzen Jahr 1"
-                    formula={`${formatCurrency(eco.annualCapacityValue)} + ${formatCurrency(eco.annualAvoidedReworkValue)} + ${formatCurrency(eco.annualHardSavings)} − ${formatCurrency(eco.implementationCost)} − ${formatCurrency(eco.annualOperatingCosts)}`}
+                    formula={`${formatCurrency(eco.annualCapacityValue)} + ${formatCurrency(eco.annualAvoidedReworkValue)} + ${formatCurrency(eco.annualHardSavings)} − ${formatCurrency(eco.implementationCost)} − ${formatCurrency(eco.annualOperatingCosts)}${hasAiCost ? ` − ${formatCurrency(eco.annualAiRunCost)}` : ''}`}
                     result={formatSignedCurrency(eco.firstYearNetBenefit)}
                   />
                   <FormulaRow
